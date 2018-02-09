@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "paths": {
+            "features-detection/*": [
+                "node_modules/FeaturesDetection/src/*"
+            ],
+            "stickies/*": [
+                "node_modules/Stickies/src/*"
+            ]
+        }
+    }
+}
