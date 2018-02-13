@@ -1,12 +1,34 @@
 {
     "compilerOptions": {
+        "target": "es5",
+        "outDir": "lib",
+        "lib": [
+            "es7",
+            "dom"
+        ],
+        "module": "umd",
+        "sourceMap": true,
+        "declaration": true,
+        "moduleResolution": "node",
+        "traceResolution": false,
+        "baseUrl": ".",
         "paths": {
-            "features-detection/*": [
-                "node_modules/FeaturesDetection/src/*"
-            ],
             "stickies/*": [
-                "node_modules/Stickies/src/*"
+                "node_modules/stickies/src/*"
+            ],
+            "features-detection/*": [
+                "node_modules/features-detection/src/*"
             ]
         }
-    }
+    },
+    "include": [
+        "src",
+        "node_modules/stickies",
+        "node_modules/features-detection"
+    ],
+    "exclude": [
+        "node_modules/[!stickies]",
+        "node_modules/[!features-detection]",
+        ".vscode-test"
+    ]
 }

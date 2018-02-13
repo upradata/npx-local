@@ -6,6 +6,8 @@ const path = require('path');
 const nodeRun = require('node-run-cmd');
 /* const colors =*/ require('colors');
 
+const readJson = require('./readJson');
+
 
 const argv = require('yargs')
     .usage('$0', 'Npm Local Install', (yargs) => {
@@ -13,11 +15,13 @@ const argv = require('yargs')
             positional('save', {
                 type: 'boolean',
                 describe: 'save in package.json',
-                conflicts: 'ZZZsave-dev'
+                default: undefined,
+                conflicts: 'save-dev'
             }).
             positional('save-dev', {
                 type: 'boolean',
-                describe: 'save-dev in package.json'
+                describe: 'save-dev in package.json',
+                default: undefined
             }).
             positional('tsconfig-path', {
                 type: 'boolean',
@@ -31,7 +35,7 @@ const argv = require('yargs')
     }, function (argv) {
         console.log('Npm Local Install');
 
-        if (argv.save === undefined || argv.saveDev === undefined) {
+        if (argv.save === undefined && argv.saveDev === undefined) {
             console.error(`it's missing --save or --save-dev. Check --help`.red);
             process.exit(1);
         }
@@ -43,7 +47,6 @@ const argv = require('yargs')
     })
     .help()
     .argv;
-
 
 const npmSaveOrSaveDev = argv.save ? 'save' : 'save-dev';
 
@@ -57,20 +60,20 @@ function getPackage(packagePath) {
 }
 
 function isAlreadyInstalled(packagePath) {
-    return packagesToBeInstalled.some(package => package.name === packagePath);
+    return packagesToBeInstalled.some(pkg => pkg.name === packagePath);
 }
 
 
 function install() {
     const $installPackages = [];
 
-    for (const package of argv._) {
+    for (const pkg of argv._) {
 
-        const isLocal = /^(\.|\/)/.test(package);
+        const isLocal = /^(\.|\/)/.test(pkg);
         if (isLocal)
-            $installPackages.push(installLocalPackages(package));
+            $installPackages.push(installLocalPackages(pkg));
         else
-            console.warn(`Skip not local package ${package}`.yellow);
+            console.warn(`Skip not local package ${pkg}`.yellow);
 
     }
 
@@ -113,7 +116,7 @@ function generateTsconfPaths(locals) {
                 const packageName = packageJson.name;
 
                 const key = `${packageName}/*`;
-                const value = `node_modules/${local.name}/${argv.rootDir}/*`;
+                const value = `node_modules/${packageName}/${argv.rootDir}/*`;
 
                 if (!pathExist(local.name, paths))
                     paths[key] = [ // attention, il faut chercher dans package.json le vrai nom!!!!
@@ -125,7 +128,7 @@ function generateTsconfPaths(locals) {
                 }
 
 
-                fs.writeFile('tsconfig.json', JSON.stringify(json), (err) => {
+                fs.writeFile('tsconfig.json', JSON.stringify(json, null, 4), (err) => {
                     if (err) throw err;
                     console.log('The file has been saved!');
                 });
@@ -157,9 +160,11 @@ function npmInstallLocalPackages() {
                 // console.error(`npm failed to install ${local.path}`);
             },
             onDone: (code) => {
-                console.log('Local Packages Install Recap:'.underline.black.bgCyan);
-                for (const local of packagesToBeInstalled) {
-                    console.log(`local package ${local.path} is installed`.green);
+                if (code !== 1) {
+                    console.log('Local Packages Install Recap:'.underline.black.bgCyan);
+                    for (const local of packagesToBeInstalled) {
+                        console.log(`local package ${local.path} is installed`.green);
+                    }
                 }
             },
             verbose: true
@@ -187,27 +192,6 @@ function installLocalPackagesRecursively(localPackage) {
     }, (err) => {
         console.warn(`Skip local package ${localPackage}`.yellow);
         return Promise.reject('done');
-    });
-}
-
-
-function readJson(directory, filename) {
-    return new Promise((resolve, reject) => {
-
-        const file = path.join(directory, filename);
-
-        if (!fs.existsSync(file)) {
-            const msg = `${file} doesn't exist`;
-            console.error(msg.red);
-            reject({ err: msg });
-        }
-
-        fs.readFile(file, 'utf8', (err, data) => {
-            if (err)
-                reject({ err });
-            else
-                resolve(data === '' ? {} : JSON.parse(data));
-        });
     });
 }
 

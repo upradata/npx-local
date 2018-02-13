@@ -6,11 +6,19 @@
   "dependencies": {
     "colors": "^1.1.2",
     "features-detection": "file:../FeaturesDetection",
+    "glob": "^7.1.2",
+    "glob-move": "^1.0.1",
+    "gulp": "^3.9.1",
+    "gulp-typescript": "^4.0.1",
+    "mv": "^2.1.1",
     "node-run-cmd": "^1.0.1",
+    "rimraf": "^2.6.2",
     "stickies": "file:../Stickies",
     "yargs": "^11.0.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@types/node": "^9.4.5"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
