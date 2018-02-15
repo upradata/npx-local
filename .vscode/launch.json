@@ -7,7 +7,7 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch Program",
+            "name": "Launch tsclocal",
             "program": "${workspaceFolder}/tsclocal.js",
             "protocol": "inspector",
             "showAsyncStacks": true,
@@ -16,6 +16,24 @@
                 "es6",
                 "--outDir",
                 "lib-esm"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch npmlocal",
+            "program": "${workspaceFolder}/npmlocal.js",
+            "protocol": "inspector",
+            "showAsyncStacks": true,
+            "args": [
+                "--save",
+                "--tsconfigPath",
+                "CACA",
+                "PIPI",
+                "../StickSSies",
+                "../FeaturesDetection",
+                "../Stickies",
+                "../Stickies"
             ]
         }
     ]

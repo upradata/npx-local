@@ -10,6 +10,7 @@
     "glob-move": "^1.0.1",
     "gulp": "^3.9.1",
     "gulp-typescript": "^4.0.1",
+    "json5": "^0.5.1",
     "mv": "^2.1.1",
     "node-run-cmd": "^1.0.1",
     "rimraf": "^2.6.2",
@@ -20,7 +21,8 @@
     "@types/node": "^9.4.5"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "renamer": "renamer -regex --find '\\.js$' --replace '.mjs' './lib-esm/**/*.js'"
   },
   "author": "",
   "license": "ISC"

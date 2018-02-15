@@ -1,7 +1,8 @@
 const path = require('path');
 const fs = require('fs');
+const JSON5 = require('json5');
 
-module.exports = function readJson(directory, filename) {
+module.exports = function $readJson(directory, filename) {
     return new Promise((resolve, reject) => {
 
         const file = path.join(directory, filename);
@@ -16,7 +17,7 @@ module.exports = function readJson(directory, filename) {
             if (err)
                 reject({ err });
             else
-                resolve(data === '' ? {} : JSON.parse(data));
+                resolve(data === '' ? {} : JSON5.parse(data));
         });
     });
 };

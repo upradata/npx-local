@@ -3,11 +3,11 @@ const path = require('path');
 const nodeRun = require('node-run-cmd');
 const glob = require('glob');
 const mv = require('mv');
-const move = require('glob-move');
+// const move = require('glob-move');
 const rimraf = require('rimraf');
 require('colors');
 
-const readJson = require('./readJson');
+const $readJson = require('./readJson5');
 
 
 const argv = require('yargs')
@@ -29,13 +29,13 @@ const argv = require('yargs')
 
 
 function tsc() {
-    readJson('./', 'tsconfig.json').then(json => {
+    $readJson('./', 'tsconfig.json').then(json => {
 
         const outDir = argv.outDir || json.compilerOptions.outDir;
         // let rootDir = argv.rootDir || json.compilerOptions.rootDir;
         const sources = includesNotNodeModules(json);
         if (sources.length === 0) {
-            console.warn(`include in tsconfig.json doesn't include a NO node_modules folder. No need to flatten it`.yellow);
+            console.warn(`./tsconfig.json has no entry in include section (other than node_modules). No need to flatten it`.yellow);
         }
 
         if (outDir === undefined) {
@@ -85,7 +85,7 @@ tsc();
 
 
 function $includesNotNodeModules(local) {
-    return readJson(local, 'tsconfig.json').then(json => {
+    return $readJson(local, 'tsconfig.json').then(json => {
         return includesNotNodeModules(json);
     },
         err => {
@@ -133,8 +133,10 @@ function flattenSrcDir(outDir, sources) {
                 const local = path.join(outDirNodeModules, localPackage);
                 const $flattenLocal = $includesNotNodeModules(path.join('node_modules', localPackage)).then(
                     sources => {
-                        console.warn(`${local} package has no include in tsconfig.json doesn't include a NO node_modules folder. No need to flatten it`);
-                        return $flattenAll(local, sources);
+                        if (sources.length === 0)
+                            console.warn(`${local}/tsconfig.json has no entry in include section (other than node_modules). No need to flatten it`.yellow);
+                        else
+                            return $flattenAll(local, sources);
                     },
                     err => err
                 );

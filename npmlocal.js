@@ -6,7 +6,7 @@ const path = require('path');
 const nodeRun = require('node-run-cmd');
 /* const colors =*/ require('colors');
 
-const readJson = require('./readJson');
+const $readJson = require('./readJson5');
 
 
 const argv = require('yargs')
@@ -44,13 +44,21 @@ const argv = require('yargs')
             console.error(`Please, specify local packages to install. Check --help`.red);
             process.exit(1);
         }
+
+        for (let i = 0; i < argv._.length; ++i)
+            argv._[i] = argv._[i].trim();
+
     })
     .help()
     .argv;
 
+
 const npmSaveOrSaveDev = argv.save ? 'save' : 'save-dev';
 
-const packagesToBeInstalled = [];
+const packagesToBeInstalled = {
+    locals: [],
+    dependencies: [],
+};
 
 
 install();
@@ -59,8 +67,14 @@ function getPackage(packagePath) {
     return path.basename(packagePath);
 }
 
-function isAlreadyInstalled(packagePath) {
-    return packagesToBeInstalled.some(pkg => pkg.name === packagePath);
+const PackageType = {
+    locals: 0,
+    dependencies: 1
+};
+
+function isAlreadyInstalled(packagePath, packageType) {
+    const packages = packageType === PackageType.locals ? packagesToBeInstalled.locals : packagesToBeInstalled.dependencies;
+    return packages.some(pkg => pkg.name === packagePath);
 }
 
 
@@ -71,84 +85,72 @@ function install() {
 
         const isLocal = /^(\.|\/)/.test(pkg);
         if (isLocal)
-            $installPackages.push(installLocalPackages(pkg));
+            $installPackages.push($installLocalPackages(pkg));
         else
             console.warn(`Skip not local package ${pkg}`.yellow);
 
     }
 
 
-    Promise.all($installPackages).then(() => npmInstallLocalPackages());
+    Promise.all($installPackages).then(
+        () => npmInstallLocalPackages(),
+        done => console.log(done.green)
+    );
 }
 
-function installLocalPackages(localPackage) {
-    if (!isAlreadyInstalled(getPackage(localPackage))) {
-        packagesToBeInstalled.push({
-            name: getPackage(localPackage),
-            path: localPackage
-        });
 
-        return installLocalPackagesRecursively(localPackage);
-    } else {
-        return Promise.resolve('done');
-    }
-}
+function $installLocalPackages(localPath) {
 
-function generateTsconfPaths(locals) {
-    const tsconfigFile = 'tsconfig.json';// path.join(local.path, 'tsconfig.json');
-    let tsconfigJson = undefined;
+    return $getLocalPackages(localPath).then(localPackages => {
+        if (!isAlreadyInstalled(getPackage(localPath), PackageType.locals)) {
+            packagesToBeInstalled.locals.push({
+                name: getPackage(localPath),
+                path: localPath
+            });
 
-    const pathExist = (name, paths) => Object.keys(paths).some(path => path.split('/')[0] === name);
+            if (localPackages.dependencies !== undefined) {
 
-    if (!fs.existsSync(tsconfigFile))
-        tsconfigJson = Promise.resolve({});
-    else
-        tsconfigJson = readJson('.', tsconfigFile);
+                for (const dep of localPackages.dependencies) {
+                    if (!isAlreadyInstalled(dep.name, PackageType.dependencies))
+                        packagesToBeInstalled.dependencies.push(dep);
 
-    tsconfigJson.then((json) => {
-        if (json.compilerOptions === undefined) json.compilerOptions = {};
-        if (json.compilerOptions.paths === undefined) json.compilerOptions.paths = {};
-
-        const paths = json.compilerOptions.paths;
-
-        for (const local of locals) {
-            readJson(local.path, 'package.json').then(packageJson => {
-                const packageName = packageJson.name;
-
-                const key = `${packageName}/*`;
-                const value = `node_modules/${packageName}/${argv.rootDir}/*`;
-
-                if (!pathExist(local.name, paths))
-                    paths[key] = [ // attention, il faut chercher dans package.json le vrai nom!!!!
-                        value
-                    ];
-                else {
-                    if (paths[key].indexOf(value) === -1)
-                        paths[key].push(value);
                 }
+            }
 
 
-                fs.writeFile('tsconfig.json', JSON.stringify(json, null, 4), (err) => {
-                    if (err) throw err;
-                    console.log('The file has been saved!');
-                });
-            }, err => err);
-        }
+            if (localPackages.locals !== undefined) { // if there is some local project. Otherwise stop recursion
+                for (const local of localPackages.locals)
+                    $installLocalPackages(path.join(localPath, '/', local.path));
 
-    }, err => err);
+            }
+
+        } else
+            return Promise.resolve('done');
+
+    }, err => {
+        console.warn(`Skip local package ${localPath}`.yellow);
+        return Promise.resolve('done');
+    });
+
 }
+
 
 function npmInstallLocalPackages() {
-    if (packagesToBeInstalled.length > 0) {
+
+    if (packagesToBeInstalled.locals.length > 0) {
 
         if (argv.tsconfigPath)
-            generateTsconfPaths(packagesToBeInstalled);
+            generateTsconfPaths();
 
 
         let command = `npm install --${npmSaveOrSaveDev} --color=always `;
 
-        for (const local of packagesToBeInstalled) {
+        for (const local of packagesToBeInstalled.locals) {
             command = command + local.path + ' ';
+        }
+
+        for (const dep of packagesToBeInstalled.dependencies) {
+            command = command + dep.name + ' ';
         }
 
 
@@ -162,7 +164,7 @@ function npmInstallLocalPackages() {
             onDone: (code) => {
                 if (code !== 1) {
                     console.log('Local Packages Install Recap:'.underline.black.bgCyan);
-                    for (const local of packagesToBeInstalled) {
+                    for (const local of packagesToBeInstalled.locals) {
                         console.log(`local package ${local.path} is installed`.green);
                     }
                 }
@@ -173,56 +175,116 @@ function npmInstallLocalPackages() {
 }
 
 
-function installLocalPackagesRecursively(localPackage) {
-    const $localPackages = getLocalPackages(localPackage);
-
-    return $localPackages.then(packages => {
-        if (packages.err) {
-            console.warn(`Skip local package ${localPackage}`.yellow);
-            return Promise.reject('done');
-        }
-        else {
-            if (packages.locals !== undefined) { // if there is some local project. Otherwise stop recursion
-                for (const local of packages.locals) {
-                    return installLocalPackages(path.join(localPackage, '/', local.path));
-                }
-            }
-        }
-
-    }, (err) => {
-        console.warn(`Skip local package ${localPackage}`.yellow);
-        return Promise.reject('done');
-    });
-}
-
-
-function getLocalPackages(directory) {
+function $getLocalPackages(directory) {
     if (!fs.existsSync(directory)) {
         const msg = `${directory} doesn't exist`;
         console.error(msg.red);
-        return Promise.reject({ err: msg });
+        return Promise.reject(msg);
     }
 
 
-    return readJson(directory, 'package.json').then((packageJson) => {
-        const dependencies = packageJson.dependencies;
+    return $readJson(directory, 'package.json').then((packageJson) => {
+        const allDependencies = packageJson.dependencies;
 
-        let localPakages = [];
+        const localPakages = [];
+        const dependencies = [];
 
-
-        for (let name of Object.getOwnPropertyNames(dependencies)) {
-            if (dependencies[name].startsWith('file')) { // file:.... local project
-                const dep = dependencies[name];
+        for (let name of Object.keys(allDependencies)) {
+            if (allDependencies[name].startsWith('file')) { // file:.... local project
+                const dep = allDependencies[name];
                 const path = dep.split('file:')[1];
 
                 localPakages.push({ name, path });
-            }
+            } else
+                dependencies.push({
+                    name,
+                    version: allDependencies[name]
+                });
         }
 
-        return {
-            err: null,
-            locals: Object.getOwnPropertyNames(localPakages).length === 0 ? undefined : localPakages
-        };
+        const locals = Object.keys(localPakages).length === 0 ? undefined : localPakages;
+        return { locals, dependencies };
 
-    }, (err) => err);
+    }, err => Promise.reject(err));
+}
+
+
+function $includesNotNodeModules(local) {
+    return $readJson(local, 'tsconfig.json').then(json => {
+        return includesNotNodeModules(json);
+    },
+        err => {
+            console.error(`A problem occured trying to read the tsconfig.json`);
+            console.error(err);
+            return Promise.reject('done');
+        });
+}
+
+
+function includesNotNodeModules(json) {
+    const includes = json.include;
+    return includes === undefined ? [] : includes.filter(path => !path.startsWith('node_modules'));
+}
+
+
+function generateTsconfPaths() {
+    const locals = packagesToBeInstalled.locals;
+
+    const tsconfigFile = 'tsconfig.json';// path.join(local.path, 'tsconfig.json');
+    let $tsconfigJson = undefined;
+
+    // "paths": {
+    // "stickies/*": [
+    //    "node_modules/stickies/src/*", ...
+
+    const pathExist = (name, paths) => Object.keys(paths).some(path => path.split('/')[0] === name);
+
+    if (!fs.existsSync(tsconfigFile))
+        $tsconfigJson = Promise.resolve({});
+    else
+        $tsconfigJson = $readJson('.', tsconfigFile);
+
+    $tsconfigJson.then((tsconfigJson) => {
+        if (tsconfigJson.compilerOptions === undefined) tsconfigJson.compilerOptions = {};
+        if (tsconfigJson.compilerOptions.paths === undefined) tsconfigJson.compilerOptions.paths = {};
+
+        const paths = tsconfigJson.compilerOptions.paths;
+
+        for (const local of locals) {
+            const $tsconfigJsonLocal = $includesNotNodeModules(local.path);
+            const $packageJsonLocal = $readJson(local.path, 'package.json');
+
+            Promise.all([$tsconfigJsonLocal, $packageJsonLocal]).then(([sources, packageJson]) => {
+                if (sources.length === 0)
+                    console.warn(`${local.path}/tsconfig.json has no entry in include section (other than node_modules).
+                    Skip ${local.name} tsconfig paths configuration (not necessary)`.yellow);
+                else if (sources.length > 0) {
+                    console.warn(`${local.name}/tsconfig.json local package has more than 1 entry in include section (other than node_modules)`.yellow);
+                    console.warn(`this feature is NOT implemented. Skip ${local.name} tsconfig paths configuration`);
+                } else {
+                    const source = sources[0];
+                    const packageName = packageJson.name;
+
+                    const key = `${packageName}/*`;
+                    const value = `node_modules/${packageName}/${source}/*`;
+
+                    if (!pathExist(local.name, paths))
+                        paths[key] = [value];
+                    else {
+                        if (paths[key].indexOf(value) === -1) // if it doesn't exist already
+                            paths[key].push(value);
+                    }
+
+
+                    fs.writeFile('tsconfig.json', JSON.stringify(tsconfigJson, null, 4), (err) => {
+                        if (err) throw err;
+                        console.log('The file has been saved!');
+                    });
+                }
+
+            },
+                err => console.error(err));
+        }
+
+    }, err => console.error(err));
 }
