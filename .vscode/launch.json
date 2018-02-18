@@ -7,8 +7,8 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "Launch tsclocal",
-            "program": "${workspaceFolder}/tsclocal.js",
+            "name": "Launch tscflatten",
+            "program": "${workspaceFolder}/src/tscflatten.js",
             "protocol": "inspector",
             "showAsyncStacks": true,
             "args": [
@@ -22,18 +22,33 @@
             "type": "node",
             "request": "launch",
             "name": "Launch npmlocal",
-            "program": "${workspaceFolder}/npmlocal.js",
+            "program": "${workspaceFolder}/src/npmlocal.js",
             "protocol": "inspector",
             "showAsyncStacks": true,
             "args": [
                 "--save",
-                "--tsconfigPath",
+                "--tsconfig",
                 "CACA",
                 "PIPI",
                 "../StickSSies",
                 "../FeaturesDetection",
                 "../Stickies",
                 "../Stickies"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch npmlocal2",
+            "program": "${workspaceFolder}/src/npmlocal.js",
+            "protocol": "inspector",
+            "showAsyncStacks": true,
+            "args": [
+                "--save",
+                "--tsconfig",
+                "../Stickies",
+                "--install-dir",
+                "locals"
             ]
         }
     ]

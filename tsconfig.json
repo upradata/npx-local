@@ -24,7 +24,9 @@
     "include": [
         "src",
         "node_modules/stickies",
-        "node_modules/features-detection"
+        "node_modules/features-detection",
+        "locals/stickies",
+        "locals/features-detection"
     ],
     "exclude": [
         "node_modules/[!stickies]",

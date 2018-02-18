@@ -1,31 +1,55 @@
+#!/usr/bin/env node
+
 const fs = require('fs');
 const path = require('path');
 const nodeRun = require('node-run-cmd');
 const glob = require('glob');
 const mv = require('mv');
 // const move = require('glob-move');
-const rimraf = require('rimraf');
+const $rm = require('./rm');
 require('colors');
 
 const $readJson = require('./readJson5');
 
+const addArg = require('./yargs-addArgv');
 
 const argv = require('yargs')
-    .usage('$0', 'Npm Local Install', (yargs) => {
-        yargs.
-            positional('outDir', {
-                type: 'string',
-                describe: 'outDir option for tsc'
-            }).
-            positional('rootDir', {
-                type: 'string',
-                describe: 'rootDir option for tsc'
-            });
+    .usage('$0 [outDir] [rootDir] [no-compile]', 'Npm Local Install', function (yargs) {
+        addArg.addSupportedArgs('localPackages');
+
+        addArg('outDir', {
+            type: 'string',
+            describe: 'outDir option for tsc'
+        }, yargs);
+
+        addArg('rootDir', {
+            type: 'string',
+            describe: 'rootDir option for tsc'
+        }, yargs);
+
+
+        addArg('no-compile', {
+            type: 'boolean',
+            describe: 'Flatten without tsc compilation',
+            default: false
+        }, yargs);
+
+
+        this.showHelp = yargs.showHelp.bind(yargs);
+
     }, function (argv) {
-        console.log('Tsc Local Compile');
+        console.log('Npm Local Install');
+
+        addArg.unvalidParamsAndExit(argv, this.showHelp);
     })
     .help()
     .argv;
+
+
+if (argv.noCompile)
+    flattenSrcDir();
+else
+    tsc();
 
 
 function tsc() {
@@ -64,7 +88,7 @@ function tsc() {
                 },
                 onDone: (code) => {
                     if (code !== 1)
-                        flattenSrcDir(outDir, sources);
+                        flattenSrcDir(outDir, sources[0].split('/')[0]); // can be a glob -> "src/**/*.ts");
                 },
                 verbose: true
             });
@@ -78,10 +102,6 @@ function tsc() {
         });
 
 }
-
-
-tsc();
-// flattenSrcDir();
 
 
 function $includesNotNodeModules(local) {
@@ -136,7 +156,7 @@ function flattenSrcDir(outDir, sources) {
                         if (sources.length === 0)
                             console.warn(`${local}/tsconfig.json has no entry in include section (other than node_modules). No need to flatten it`.yellow);
                         else
-                            return $flattenAll(local, sources);
+                            return $flattenAll(local, sources[0].split('/')[0]); // can be a glob -> "src/**/*.ts"););
                     },
                     err => err
                 );
@@ -181,17 +201,6 @@ function $flatten(directory, source) {
     });
 }
 
-
-function $rm(fileOrDir) {
-    return new Promise((resolve, reject) => {
-        rimraf(fileOrDir, {}, err => {
-            if (err)
-                reject(err);
-            else
-                resolve('done');
-        });
-    });
-}
 
 function $moveFile(from, to) {
     return new Promise((resolve, reject) => {

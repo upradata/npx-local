@@ -1,10 +1,14 @@
 {
-  "name": "npmlocal",
+  "name": "local-installation",
   "version": "1.0.0",
   "description": "Npm Local Packages Install",
   "main": "npmlocal.js",
   "dependencies": {
+    "babel-core": "^6.26.0",
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.1",
     "colors": "^1.1.2",
+    "css-supports": "^0.1.1",
     "features-detection": "file:../FeaturesDetection",
     "glob": "^7.1.2",
     "glob-move": "^1.0.1",
@@ -13,12 +17,16 @@
     "json5": "^0.5.1",
     "mv": "^2.1.1",
     "node-run-cmd": "^1.0.1",
+    "postcss-cli": "^4.1.1",
+    "raf": "^3.4.0",
     "rimraf": "^2.6.2",
+    "rxjs": "^5.5.6",
     "stickies": "file:../Stickies",
+    "tslint-loader": "^3.5.3",
     "yargs": "^11.0.0"
   },
   "devDependencies": {
-    "@types/node": "^9.4.5"
+    "@types/node": "^8.9.4"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
