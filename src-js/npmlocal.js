@@ -14,7 +14,7 @@ const runShell = require('./runShell');
 /* const colors =*/ require('colors');
 const StringDecoder = require('string_decoder').StringDecoder;
 
-const $readJson = require('./readJson5');
+const $readJson = require('../src/readJson5');
 
 /* const yargsOption = {
     command: 'run',
@@ -297,7 +297,7 @@ function npmInstallLocalPackages() {
                     for (const local of packagesToBeInstalled.locals) {
                         console.log(`local package ${local.path} is installed`.green);
                     }
- 
+
                     console.log('\nLocal Dependencies Install Recap:'.underline.black.bgCyan);
                     for (const depName of Object.keys(packagesToBeInstalled.dependencies)) {
                         console.log(`local package ${depName} is installed`.green);

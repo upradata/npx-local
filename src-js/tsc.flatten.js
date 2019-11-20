@@ -9,7 +9,7 @@ const mv = require('mv');
 const $rm = require('./rm');
 require('colors');
 
-const $readJson = require('./readJson5');
+const $readJson = require('../src/readJson5');
 
 const addArg = require('./yargs-addArgv');
 

@@ -1,0 +1,17 @@
+{
+  "name": "project3",
+  "version": "0.0.1",
+  "description": "",
+  "main": "lib",
+  "modules": "lib-esm",
+  "files": [
+    "lib",
+    "lib-esm"
+  ],
+  "module": "lib-esm",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
+  "license": "MIT"
+}

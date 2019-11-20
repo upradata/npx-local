@@ -1,37 +1,59 @@
 {
-  "name": "local-installation",
-  "version": "1.0.0",
-  "description": "Npm Local Packages Install",
-  "main": "npmlocal.js",
-  "dependencies": {
-    "babel-core": "^6.26.0",
-    "babel-loader": "^7.1.2",
-    "babel-preset-env": "^1.6.1",
-    "colors": "^1.1.2",
-    "css-supports": "^0.1.1",
-    "features-detection": "file:../FeaturesDetection",
-    "glob": "^7.1.2",
-    "glob-move": "^1.0.1",
-    "gulp": "^3.9.1",
-    "gulp-typescript": "^4.0.1",
-    "json5": "^0.5.1",
-    "mv": "^2.1.1",
-    "node-run-cmd": "^1.0.1",
-    "postcss-cli": "^4.1.1",
-    "raf": "^3.4.0",
-    "rimraf": "^2.6.2",
-    "rxjs": "^5.5.6",
-    "stickies": "file:../Stickies",
-    "tslint-loader": "^3.5.3",
-    "yargs": "^11.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^8.9.4"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "renamer": "renamer -regex --find '\\.js$' --replace '.mjs' './lib-esm/**/*.js'"
-  },
-  "author": "",
-  "license": "ISC"
+    "name": "local-installation",
+    "version": "1.0.0",
+    "description": "Npm Local Packages Install",
+    "main": "lib",
+    "module": "lib-esm",
+    "dependencies": {
+        "@types/yargs": "^13.0.3",
+        "@upradata/browser-util": "^1.0.21",
+        "@upradata/node-util": "^2.0.3",
+        "@upradata/util": "^1.0.23",
+        "babel-core": "^6.26.3",
+        "babel-loader": "^8.0.6",
+        "babel-preset-env": "^1.7.0",
+        "colors": "^1.4.0",
+        "fs-extra": "^8.1.0",
+        "glob": "^7.1.6",
+        "glob-move": "^1.0.1",
+        "gulp": "^4.0.2",
+        "gulp-typescript": "^5.0.1",
+        "json5": "^2.1.1",
+        "mv": "^2.1.1",
+        "node-run-cmd": "^1.0.1",
+        "rimraf": "^3.0.0",
+        "rxjs": "^6.5.3",
+        "stickies": "file:../Stickies",
+        "yargs": "^15.0.2"
+    },
+    "devDependencies": {
+        "@schemastore/package": "0.0.5",
+        "@types/fs-extra": "^8.0.1",
+        "@types/jest": "^24.0.23",
+        "@types/node": "^12.12.9",
+        "@types/rimraf": "^2.0.3",
+        "jest": "^24.9.0",
+        "jest-expect-message": "^1.0.2",
+        "ts-jest": "^24.1.0",
+        "ts-node": "^8.5.2"
+    },
+    "scripts": {
+        "git:push": "npm version patch && git push && git push --tags",
+        "npm:publish": "npm publish --access public",
+        "postinstall": "npx install-local",
+        "clean": "shx rm -r dist || true",
+        "prebuild": "npm run clean",
+        "postbuild": "npm run all-test",
+        "build": "yarn run clean && tsc && tsc -m es6 --outDir lib-esm",
+        "all-test": "npm run test && npm run e2e",
+        "test": "jest --config jest-ut.config.js",
+        "e2e": "jest --config jest-e2e.config.js",
+        "renamer": "renamer -regex --find '\\.js$' --replace '.mjs' './lib-esm/**/*.js'"
+    },
+    "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
+    "license": "MIT",
+    "files": [
+        "lib",
+        "lib-esm"
+    ]
 }
