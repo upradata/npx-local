@@ -1,23 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`LocalInstall test suite snapshots Install local pacakges 1`] = `
+exports[`Test => npmlocal --verbose --force [...local-projects] is package.json same snapshot 1`] = `
 Object {
   "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
   "description": "",
-  "files": Array [
-    "lib",
-    "lib-esm",
-  ],
   "license": "MIT",
-  "localDependencies": Object {
-    "project1": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project1@0.0.1",
-    "project2": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project2@0.0.1",
-    "project3": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project3@0.0.1",
+  "local": Object {
+    "dependencies": Object {
+      "project2": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project2@0.0.1",
+      "project3": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project3@0.0.1",
+      "project4": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project4@0.0.1",
+    },
+    "usedBy": Object {
+      "project4": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project4",
+    },
   },
   "main": "lib",
-  "module": "lib-esm",
-  "modules": "lib-esm",
-  "name": "project4",
+  "name": "project1",
   "scripts": Object {
     "test": "echo \\"Error: no test specified\\" && exit 1",
   },
@@ -25,23 +24,68 @@ Object {
 }
 `;
 
-exports[`LocalInstall test suite snapshots Install package.json 1`] = `
+exports[`Test => npmlocal --verbose --force [...local-projects] is package.json same snapshot 2`] = `
+Object {
+  "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
+  "description": "",
+  "license": "MIT",
+  "local": Object {
+    "usedBy": Object {
+      "project1": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project1",
+      "project4": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project4",
+    },
+  },
+  "module": "lib-esm/index.js",
+  "name": "project2",
+  "scripts": Object {
+    "test": "echo \\"Error: no test specified\\" && exit 1",
+  },
+  "version": "0.0.1",
+}
+`;
+
+exports[`Test => npmlocal --verbose --force [...local-projects] is package.json same snapshot 3`] = `
 Object {
   "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
   "description": "",
   "files": Array [
     "lib",
     "lib-esm",
+    "README.md",
   ],
   "license": "MIT",
-  "localDependencies": Object {
-    "project1": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project1@0.0.1",
-    "project2": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project2@0.0.1",
-    "project3": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project3@0.0.1",
+  "local": Object {
+    "usedBy": Object {
+      "project1": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project1",
+      "project4": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project4",
+    },
   },
   "main": "lib",
   "module": "lib-esm",
-  "modules": "lib-esm",
+  "name": "project3",
+  "scripts": Object {
+    "test": "echo \\"Error: no test specified\\" && exit 1",
+  },
+  "version": "0.0.1",
+}
+`;
+
+exports[`Test => npmlocal --verbose --force [...local-projects] is package.json same snapshot 4`] = `
+Object {
+  "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
+  "description": "",
+  "license": "MIT",
+  "local": Object {
+    "dependencies": Object {
+      "project1": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project1@0.0.1",
+      "project2": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project2@0.0.1",
+      "project3": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project3@0.0.1",
+    },
+    "usedBy": Object {
+      "project1": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project1",
+    },
+  },
+  "main": "lib/index.js",
   "name": "project4",
   "scripts": Object {
     "test": "echo \\"Error: no test specified\\" && exit 1",

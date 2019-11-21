@@ -6,7 +6,7 @@ import { SourceDest, Skipped, isSkipped } from './types';
 import { ObjectOf } from '@upradata/util';
 
 export class LocalInstallOptions {
-    localPackages?: string[];
+    localPackages: string[];
     installDir?: string = process.cwd();
     verbose: boolean = false;
     force: boolean = false;
@@ -20,7 +20,7 @@ export class LocalInstall {
     }
 
     public install() {
-        if (this.options.localPackages)
+        if (this.options.localPackages.length > 0)
             return this.installLocalDepedenciesFromArgv();
 
         return this.installLocalDependenciesFromPackageJson(new NpmProject(process.cwd()));
@@ -28,10 +28,10 @@ export class LocalInstall {
 
     public async installLocalDependenciesFromPackageJson(npmProject: NpmProject): Promise<void> {
         const packageJson = await npmProject.loadProject();
-        const localDeps: ObjectOf<string> = packageJson[ NpmProject.localDependenciesFieldName ];
+        const localDeps: ObjectOf<string> = packageJson.local.dependencies;
 
         if (!localDeps)
-            return console.log(yellow`No localDependencies found in ${npmProject.packageJson.name} package.json`);
+            return console.log(yellow`No localDependencies found in ${npmProject.packageJson.json.name} package.json`);
 
         return this.installLocalDependencies(Object.values(localDeps).map(dep => dep.split('@')[ 0 ]));
     }
@@ -62,6 +62,7 @@ export class LocalInstall {
             await dest.writePackageJson();
             return ret;
         }).then(ret => {
+            const donePromises: Promise<void>[] = [];
 
             for (const result of ret) {
                 if (isSkipped(result)) {
@@ -69,11 +70,16 @@ export class LocalInstall {
                     console.log(yellow`    - ${reason}`);
                 } else {
                     const { source, dest } = result;
-                    console.log(colors.blue.bold.$`\n\n
-                        - Package ${source.packageJson.name} installed in ${dest.packageJson.name} package.json "localDependencies"`
-                    );
+
+                    donePromises.push(source.writePackageJson().then(() => {
+                        console.log(colors.blue.bold.$`\n\n
+                        - Package ${source.packageJson.json.name} installed in ${dest.packageJson.json.name} package.json "localDependencies"`
+                        );
+                    }));
                 }
             }
+
+            return Promise.all(donePromises).then(() => { });
         }).catch(err => {
             console.error(red`Something wrong happened: ${err.message || err}`, err.stack ? red`\n${err.stack}` : '');
         });
@@ -87,14 +93,14 @@ export class LocalInstall {
             dest.loadProject()
         ]);
 
-        const dep = await dest.localDependency(source.packageJson.name);
+        const dep = await dest.localDependency(source.packageJson.json.name);
         const destNodeModulesFiles = await dest.nodeModulesFiles();
 
-        if (dep && dep.version === source.packageJson.version && destNodeModulesFiles.includes(source.packageJson.name)) {
+        if (dep && dep.version === source.packageJson.json.version && destNodeModulesFiles.includes(source.packageJson.json.name)) {
             if (!this.options.force)
-                return { skipped: true, reason: `${source.packageJson.name} is already installed with the latest version ${dep.version}` };
+                return { skipped: true, reason: `${source.packageJson.json.name} is already installed with the latest version ${dep.version}` };
 
-            console.log(yellow`${source.packageJson.name} will be reinstalled by force\n`);
+            console.log(yellow`${source.packageJson.json.name} will be reinstalled by force\n`);
         }
 
         const filesInstaller = new FilesInstaller(source);

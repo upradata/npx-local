@@ -2,6 +2,7 @@ import { promisify } from 'util';
 import { exec, ExecOptions } from 'child_process';
 import { readFile } from 'fs';
 import path from 'path';
+import { readdir } from 'fs-extra';
 
 
 const execAsync = promisify(exec);
@@ -20,3 +21,11 @@ export async function execAsyncCommand(command: string, options?: { encoding?: B
 
 export const root = path.join(__dirname, '..');
 export const fromRoot = (...paths: string[]) => path.join(root, ...paths);
+
+
+
+export const localInstall = fromRoot('lib/index.js');
+export const testProjectsDir = fromRoot('TestProjects');
+
+export const projectDir = (i: number) => path.join(testProjectsDir, `Project${i}`);
+export const readDepInNodeModules = (project: number, dep: number) => readdir(path.join(projectDir(project), `node_modules/project${dep}`));

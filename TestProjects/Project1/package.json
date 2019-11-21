@@ -1,11 +1,21 @@
 {
-  "name": "project1",
-  "version": "0.0.1",
-  "description": "",
-  "main": "lib",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
-  "license": "MIT"
+	"name": "project1",
+	"version": "0.0.1",
+	"description": "",
+	"main": "lib",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
+	"license": "MIT",
+	"local": {
+		"usedBy": {
+			"project4": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project4"
+		},
+		"dependencies": {
+			"project4": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project4@0.0.1",
+			"project2": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project2@0.0.1",
+			"project3": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project3@0.0.1"
+		}
+	}
 }

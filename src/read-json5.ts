@@ -19,7 +19,7 @@ export function readJsonSync(filename: string): JSONSchemaForNPMPackageJsonFiles
     return readJson(filename, 'sync') as JSONSchemaForNPMPackageJsonFiles;
 }
 
-export function readJsonASync(filename: string): Promise<JSONSchemaForNPMPackageJsonFiles> {
+export function readJsonAsync(filename: string): Promise<JSONSchemaForNPMPackageJsonFiles> {
     return readJson(filename, 'async') as Promise<JSONSchemaForNPMPackageJsonFiles>;
 }
 

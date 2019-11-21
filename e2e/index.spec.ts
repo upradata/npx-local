@@ -1,83 +1,76 @@
-import { green } from '../src/util/colors';
-import { NpmProject } from '../src/node-project';
-import { execAsyncCommand, root, fromRoot } from './util';
-import { readJsonSync } from '../src/read-json5';
+import { projectDir } from './util';
+import { readJsonAsync } from '../src/read-json5';
 import path from 'path';
-import { JSONSchemaForNPMPackageJsonFiles } from '@schemastore/package';
 import { rm$ } from '../src/util/common';
-import { ObjectOf } from '@upradata/util';
-import { readdir } from 'fs-extra';
+import { LocalInstallPackageJsonType } from '../src/package-json';
+import { chain } from '@upradata/util';
+import { execNpmLocal, checkNodeModules, Dependency, checkLocalProp } from './common';
+import { projects } from './projects.config';
 
 
 // execSync(`cd ${root} && tsc`);
 
-const localInstall = fromRoot('lib/index.js');
-const testProjectsDir = fromRoot('TestProjects');
-const project4Dir = path.join(testProjectsDir, 'Project4');
+async function checkLocalDependencies(projectI: number, deps: Dependency[]) {
+    const packageJson = await readJsonAsync(path.join(projectDir(projectI), 'package.json')) as LocalInstallPackageJsonType;
+    // console.log({ projectI, deps });
+    checkLocalProp(chain(() => packageJson.local.dependencies), deps.map(dep => dep.projectI));
+    await checkNodeModules(projectI, deps);
+}
 
 
-const localDepencies = (packageJson: JSONSchemaForNPMPackageJsonFiles) => packageJson[ NpmProject.localDependenciesFieldName ] as ObjectOf<string>;
+async function checkLocalUsedBy(projectI: number, usedBys: number[]) {
+    const packageJson = await readJsonAsync(path.join(projectDir(projectI), 'package.json')) as LocalInstallPackageJsonType;
+    checkLocalProp(chain(() => packageJson.local.usedBy), usedBys);
+}
 
-describe(
-    // tslint:disable-next-line: max-line-length
-    'LocalInstall test suite snapshots', () => {
-
-        beforeAll(async () => {
-            jest.setTimeout(30000);
-            await rm$(path.join(testProjectsDir, 'Project4/node_modules'));
-        });
-
-
-        async function checkInstall() {
-            const packageJson = readJsonSync(path.join(testProjectsDir, 'Project4/package.json'));
-
-            const deps = localDepencies(packageJson);
-            const depsEntries = Object.entries(deps).map(([ k, v ]) => ({ name: k, path: v }));
-
-            let nodeModulesFiles = await readdir(path.join(project4Dir, 'node_modules'));
-
-            expect(depsEntries.length).toBe(3);
-
-            for (let i = 1; i < 4; ++i) {
-                expect(depsEntries.map(d => d.name).includes(`project${i}`)).toBe(true);
-
-                const projectPath = path.join(testProjectsDir, `Project${i}`);
-                expect(depsEntries.map(d => d.path).find(p => p.startsWith(`${projectPath}@`))).toBeDefined();
-
-                expect(nodeModulesFiles.includes(`project${i}`));
-            }
-
-            nodeModulesFiles = await readdir(path.join(project4Dir, 'node_modules/project1'));
-            expect(nodeModulesFiles.length === 2 && nodeModulesFiles.includes('lib') && nodeModulesFiles.includes('package.json')).toBe(true);
-
-            nodeModulesFiles = await readdir(path.join(project4Dir, 'node_modules/project2'));
-            expect(nodeModulesFiles.length === 2 && nodeModulesFiles.includes('lib-esm') && nodeModulesFiles.includes('package.json')).toBe(true);
-
-            nodeModulesFiles = await readdir(path.join(project4Dir, 'node_modules/project3'));
-            expect(nodeModulesFiles.length === 3 && nodeModulesFiles.includes('lib') && nodeModulesFiles.includes('lib-esm') && nodeModulesFiles.includes('package.json')).toBe(true);
+async function snapshot(projectI: number) {
+    const packageJson = await readJsonAsync(path.join(projectDir(projectI), 'package.json')) as LocalInstallPackageJsonType;
+    expect(packageJson).toMatchSnapshot();
+}
 
 
-            expect(packageJson).toMatchSnapshot();
-        }
+describe('Test => npmlocal --verbose --force [...local-projects]', () => {
+
+    beforeAll(async () => {
+        jest.setTimeout(30000);
+        await Promise.all([ 1, 2, 3, 4 ].map(i => rm$(path.join(projectDir(i), 'node_modules')).catch(console.warn)));
+        await execNpmLocal(1, [ 2, 3, 4 ]);
+        await execNpmLocal(4, [ 1, 2, 3 ]);
+    });
+
+    test('is localDependencies set', async () => {
+        await Promise.all([
+            checkLocalDependencies(projects.project1.projectI, projects.project1.localDeps),
+            checkLocalDependencies(projects.project4.projectI, projects.project4.localDeps)
+        ]);
+    });
 
 
-        test('Install local pacakges', async () => {
-            const packageJson = readJsonSync(path.join(project4Dir, 'package.json'));
-            delete packageJson[ NpmProject.localDependenciesFieldName ];
+    test('is usedBy set', async () => {
+        await Promise.all([
+            checkLocalUsedBy(projects.project1.projectI, projects.project1.usedBys),
+            checkLocalUsedBy(projects.project2.projectI, projects.project2.usedBys),
+            checkLocalUsedBy(projects.project3.projectI, projects.project3.usedBys),
+            checkLocalUsedBy(projects.project4.projectI, projects.project4.usedBys),
+        ]);
+    });
 
-            const command = `${localInstall} --verbose --force ../Project1 ../Project2 ../Project3`;
-            console.log(green`Executing: ${command} in ${project4Dir}`);
+    test('is package.json same snapshot', async () => {
+        await Promise.all(Object.values(projects).map((p, i) => snapshot(i + 1)));
+    });
+}
+);
 
-            await execAsyncCommand(command, { cwd: project4Dir }, false);
-            return checkInstall();
-        });
+describe('Test => npmlocal in current npm package', () => {
 
-        test('Install package.json', async () => {
-            const command = `${localInstall}  --verbose  --force`;
-            console.log(green`Executing: ${command} in ${project4Dir}`);
+    beforeAll(async () => {
+        jest.setTimeout(30000);
+        await rm$(path.join(projectDir(4), 'node_modules')).catch(console.warn);
+        await execNpmLocal(4);
+    });
 
-            await execAsyncCommand(command, { cwd: project4Dir }, false);
-            return checkInstall();
-        });
-    }
+    test('Install package.json', async () => {
+        await checkLocalDependencies(projects.project4.projectI, projects.project4.localDeps);
+    });
+}
 );

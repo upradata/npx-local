@@ -18,7 +18,7 @@ export interface CopiedFiles {
 
 export class FilesInstaller {
 
-    public filesToBeInstalled: OriginalAbsolute[] = [];
+    public filesToBeInstalled = new Map<string, OriginalAbsolute>();
     public installedFiles: CopiedFiles;
 
 
@@ -29,8 +29,8 @@ export class FilesInstaller {
         for (const file of files) {
             if (isDefined(file)) {
                 const f = file.startsWith('/') ? file : this.npmProject.absolutePath(file);
-                this.filesToBeInstalled.push({
-                    original: path.join(this.npmProject.projectPath.original, file),
+                this.filesToBeInstalled.set(f, {
+                    original: path.join(this.npmProject.projectPath.original, path.basename(file)),
                     absolute: f
                 });
             }
@@ -60,17 +60,16 @@ export class FilesInstaller {
 
 
         if (chain(() => files.length, 0) > 0)
-            this.add(...files.map(file => this.npmProject.absolutePath(file)));
-        else {
-            const files = [ main, module ].filter(file => !!file).map(file => this.stats(file));
+            this.add(...files); // .map(file => this.npmProject.absolutePath(file)));
 
-            for await (const { file, stats } of await Promise.all(files)) {
-                if (isDefined(file)) {
-                    if (stats.isDirectory())
-                        this.add(file);
-                    else
-                        this.add(path.basename(file));
-                }
+        const mainFiles = [ main, module ].filter(file => !!file).map(file => this.stats(file));
+
+        for await (const { file, stats } of await Promise.all(mainFiles)) {
+            if (isDefined(file)) {
+                if (stats.isDirectory())
+                    this.add(file);
+                else
+                    this.add(path.dirname(file));
             }
         }
     }
@@ -78,7 +77,7 @@ export class FilesInstaller {
     public async copyFiles(destNpmProject: NpmProject): Promise<CopiedFiles> {
         await this.readFilesToBeInstalled();
 
-        if (this.filesToBeInstalled.length === 0) {
+        if (this.filesToBeInstalled.size === 0) {
             this.installedFiles = {
                 dest: destNpmProject,
                 files: [
@@ -91,7 +90,7 @@ export class FilesInstaller {
 
         } else {
 
-            const nodeModulePackage = path.join('node_modules', this.npmProject.packageJson.name);
+            const nodeModulePackage = path.join('node_modules', this.npmProject.packageJson.json.name);
 
             const dest: OriginalAbsolute = {
                 absolute: path.join(destNpmProject.projectPath.absolute, nodeModulePackage),
@@ -101,7 +100,7 @@ export class FilesInstaller {
 
             const copyPromises: Promise<SourceDest<OriginalAbsolute> | Skipped>[] = [];
 
-            for (const fileOrDir of this.filesToBeInstalled) {
+            for (const fileOrDir of this.filesToBeInstalled.values()) {
 
                 const destination = path.join(dest.absolute, path.basename(fileOrDir.absolute));
 
@@ -109,9 +108,12 @@ export class FilesInstaller {
                     copy(fileOrDir.absolute, destination, { preserveTimestamps: true, overwrite: true }).then(() => {
                         return { source: fileOrDir, dest };
                     }).catch(e => {
+                        // create stack
+                        const err = new Error(typeof e === 'string' ? e : e.message);
+
                         return {
                             skipped: true,
-                            reason: typeof e === 'string' ? e : `${e.message}\n${e.stack}`
+                            reason: `${err.message}\n${err.stack}`
                         };
                     })
                 );
@@ -131,7 +133,7 @@ export class FilesInstaller {
         const dest = this.installedFiles.dest;
 
         const localInstalled = stringAlignCenter(
-            `${this.npmProject.packageJson.name} ("${source.projectPath.original}") installed in ${dest.packageJson.name} ("${dest.projectPath.original}")`, terminalWidth
+            `${this.npmProject.packageJson.json.name} ("${source.projectPath.original}") installed in ${dest.packageJson.json.name} ("${dest.projectPath.original}")`, terminalWidth
         );
 
         console.log(
