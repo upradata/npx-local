@@ -1,68 +1,87 @@
 
-import yargs from 'yargs/yargs';
-import { Argv } from 'yargs';
-import { YargsAddArgument } from './yargs-add-argv';
 import { LocalInstallOptions } from './local-install.options';
-
+import { readJsonSync } from './read-json5';
+import findUp from 'find-up';
+import { ParseArgs } from './parse-args';
 
 export interface ProgramArgv extends LocalInstallOptions {
-    'install-dir'?: string;
+    'install-dir': string;
+    help: boolean;
 }
 
 export function processArgs() {
-    const yargv = yargs(process.argv.slice(2), undefined, require) as Argv<ProgramArgv>;
-    const addArg = new YargsAddArgument(yargv);
+    const yargs = new ParseArgs<ProgramArgv>() as ParseArgs<ProgramArgv>;
 
-    yargv.command([ 'install', '$0' ], 'npmlocal install local dependencies');
+    // Does not work as expectd. To permissive
+    // yargs.strict(true);
 
-    addArg.addOption('local-packages', {
+    yargs.command([ 'install', '$0' ], 'npmlocal install local dependencies');
+    yargs.version(readJsonSync(findUp.sync('package.json', { cwd: __dirname })).version);
+
+    yargs.option('local-packages', {
         type: 'array',
         alias: 'l',
-        describe: 'local packages to install'
+        describe: 'Local packages to install'
     });
 
-    addArg.addOption('install-dir', {
+    yargs.option('install-dir', {
         type: 'string',
         default: './',
         alias: 'd',
-        describe: 'directory where to install local packages'
+        describe: 'Directory where to install local packages'
     });
 
-    addArg.addOption('mode', {
+    yargs.option('mode', {
         type: 'string',
         default: 'link',
         alias: 'm',
-        describe: 'choose if the local dependency files are copied or linked in node_modules'
+        describe: 'Choose if the local dependency files are copied or linked in node_modules'
     });
 
-    addArg.addOption('force', {
+    yargs.option('force', {
         type: 'boolean',
         default: false,
         alias: 'f',
-        describe: 'force package installation'
+        describe: 'Force package installation'
     });
 
-    addArg.addOption('verbose', {
+    yargs.option('verbose', {
         type: 'count',
         default: 0,
         alias: 'v',
-        describe: 'enable verbose mode'
+        describe: 'Enable verbose mode'
     });
 
 
-    addArg.addOption('watch', {
+    yargs.option('watch', {
         type: 'boolean',
         default: false,
         alias: 'w',
-        describe: 'enable watch mode'
+        describe: 'Enable watch mode'
     });
 
-    const argv = yargv.help().argv;
+    yargs.option('help', {
+        type: 'boolean',
+        default: false,
+        alias: 'h',
+        describe: 'Show this help'
+    });
+
+    yargs.middleware(argv => {
+        // help is done by yargs by default
+        if (argv.h) {
+            yargs.showHelp();
+            process.exit(1);
+        }
+    });
+
+
+    const argv = yargs.help().argv;
 
 
     console.log('Npm Local Install\n');
 
-    addArg.unvalidParamsAndExit(argv);
+    yargs.unvalidParamsAndExit(argv);
 
     const localPackages = argv.localPackages = argv.localPackages || argv._ || [];
 
