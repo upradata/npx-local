@@ -2,31 +2,18 @@
 import yargs from 'yargs/yargs';
 import { Argv } from 'yargs';
 import { YargsAddArgument } from './yargs-add-argv';
+import { LocalInstallOptions } from './local-install.options';
 
 
-/* const yargsOption = {
-    command: 'run',
-    aliases: '$0',
-    describe: 'Npm Local Install',
-    builder: (yargs) => 1 === 1,
-    handler: ''
-};*/
-
-
-export interface ProgramArgvInput {
+export interface ProgramArgv extends LocalInstallOptions {
     'install-dir'?: string;
-    verbose: boolean;
-    force: boolean;
-}
-
-export interface ProgramArgv extends ProgramArgvInput {
-    localPackages?: string[];
-    installDir?: string;
 }
 
 export function processArgs() {
     const yargv = yargs(process.argv.slice(2), undefined, require) as Argv<ProgramArgv>;
     const addArg = new YargsAddArgument(yargv);
+
+    yargv.command([ 'install', '$0' ], 'npmlocal install local dependencies');
 
     addArg.addOption('local-packages', {
         type: 'array',
@@ -41,6 +28,13 @@ export function processArgs() {
         describe: 'directory where to install local packages'
     });
 
+    addArg.addOption('mode', {
+        type: 'string',
+        default: 'link',
+        alias: 'm',
+        describe: 'choose if the local dependency files are copied or linked in node_modules'
+    });
+
     addArg.addOption('force', {
         type: 'boolean',
         default: false,
@@ -49,10 +43,18 @@ export function processArgs() {
     });
 
     addArg.addOption('verbose', {
-        type: 'boolean',
-        default: false,
+        type: 'count',
+        default: 0,
         alias: 'v',
         describe: 'enable verbose mode'
+    });
+
+
+    addArg.addOption('watch', {
+        type: 'boolean',
+        default: false,
+        alias: 'w',
+        describe: 'enable watch mode'
     });
 
     const argv = yargv.help().argv;

@@ -1,62 +1,93 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch tscflatten",
-      "program": "${workspaceFolder}/src/tscflatten.js",
-      "protocol": "inspector",
-      "showAsyncStacks": true,
-      "args": ["-m", "es6", "--outDir", "lib-esm"]
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch npmlocal",
-      "program": "${workspaceFolder}/src/npmlocal.js",
-      "protocol": "inspector",
-      "showAsyncStacks": true,
-      "args": ["--save", "--tsconfig", "CACA", "PIPI", "../StickSSies", "../FeaturesDetection", "../Stickies", "../Stickies"]
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch npmlocal2",
-      "program": "${workspaceFolder}/src/npmlocal.js",
-      "protocol": "inspector",
-      "showAsyncStacks": true,
-      "args": ["--save", "--tsconfig", "../Stickies", "--install-dir", "locals"]
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "npmlocal ../Project1",
-      "program": "${workspaceFolder}/lib/index.js",
-      "args": ["--verbose", "../Project1"],
-      "outFiles": ["${workspaceFolder}/lib/**/*.js"],
-      "cwd": "${workspaceFolder}/TestProjects/Project4"
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "npmlocal",
-      "program": "${workspaceFolder}/lib/index.js",
-      "args": ["-v"],
-      "outFiles": ["${workspaceFolder}/lib/**/*.js"],
-      "cwd": "${workspaceFolder}/TestProjects/Project4"
-    },
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "npmlocal --verbose --force ../Project1 ../Project2 ../Project3",
-      "program": "${workspaceFolder}/lib/index.js",
-      "args": ["--verbose", "--force", "../Project1", "../Project2", "../Project3"],
-      "outFiles": ["${workspaceFolder}/lib/**/*.js"],
-      "cwd": "${workspaceFolder}/TestProjects/Project4"
-    }
-  ]
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch tscflatten",
+            "program": "${workspaceFolder}/src/tscflatten.js",
+            "protocol": "inspector",
+            "showAsyncStacks": true,
+            "args": ["-m", "es6", "--outDir", "lib-esm"]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch npmlocal",
+            "program": "${workspaceFolder}/src/npmlocal.js",
+            "protocol": "inspector",
+            "showAsyncStacks": true,
+            "args": [
+                "--save",
+                "--tsconfig",
+                "CACA",
+                "PIPI",
+                "../StickSSies",
+                "../FeaturesDetection",
+                "../Stickies",
+                "../Stickies"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch npmlocal2",
+            "program": "${workspaceFolder}/src/npmlocal.js",
+            "protocol": "inspector",
+            "showAsyncStacks": true,
+            "args": [
+                "--save",
+                "--tsconfig",
+                "../Stickies",
+                "--install-dir",
+                "locals"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "npmlocal ../Project1",
+            "program": "${workspaceFolder}/lib/index.js",
+            "args": ["--verbose", "../Project1"],
+            "outFiles": ["${workspaceFolder}/lib/**/*.js"],
+            "cwd": "${workspaceFolder}/TestProjects/Project4"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "npmlocal",
+            "program": "${workspaceFolder}/lib/index.js",
+            "args": ["-v"],
+            "outFiles": ["${workspaceFolder}/lib/**/*.js"],
+            "cwd": "${workspaceFolder}/TestProjects/Project4"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "npmlocal --verbose --force ../Project1 ../Project2 ../Project3",
+            "program": "${workspaceFolder}/lib/index.js",
+            "args": [
+                "--verbose",
+                "--force",
+                "../Project1",
+                "../Project2",
+                "../Project3"
+            ],
+            "outFiles": ["${workspaceFolder}/lib/**/*.js"],
+            "cwd": "${workspaceFolder}/TestProjects/Project4"
+        },
+        ,
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "npmlocal -v --force  -w",
+            "program": "${workspaceFolder}/lib/index.js",
+            "args": ["--force", "-v", "-w"],
+            "outFiles": ["${workspaceFolder}/lib/**/*.js"],
+            "cwd": "${workspaceFolder}/TestProjects/Project4"
+        }
+    ]
 }

@@ -1,11 +1,9 @@
 
-import { chain } from '@upradata/util';
 import path from 'path';
-import { pathExists, writeJSON } from 'fs-extra';
-import { readJsonAsync } from './read-json5';
+import { writeJSON } from 'fs-extra';
 import { OriginalAbsolute } from './types';
-import { readdir$ } from './util/common';
 import { LocalInstallPackageJson } from './package-json';
+import { readdir$ } from './util/promisify';
 
 
 export interface Dependency {
@@ -27,16 +25,31 @@ export class NpmProject {
         this.packageJson = new LocalInstallPackageJson(this.projectPath.absolute);
     }
 
-    public async getPackageJson() {
-        return this.packageJson.readJson();
+    public async getPackageJson(force?: boolean) {
+        return this.packageJson.readJson(force);
     }
 
     public async nodeModulesFiles(): Promise<string[]> {
         return readdir$(this.absolutePath('node_modules')).catch(e => []);
     }
 
-    public absolutePath(filepath: string) {
-        return path.join(this.projectPath.absolute, filepath);
+    public absolutePath(...filepaths: string[]) {
+        return path.join(this.projectPath.absolute, ...filepaths);
+    }
+
+    public originalPath(...filepaths: string[]) {
+        return path.join(this.projectPath.original, ...filepaths);
+    }
+
+    public path(...filepaths: string[]): OriginalAbsolute {
+        return {
+            absolute: this.absolutePath(...filepaths),
+            original: this.originalPath(...filepaths)
+        };
+    }
+
+    public get nodeModulesPath(): OriginalAbsolute {
+        return this.path('node_modules');
     }
 
     public async loadProject() {

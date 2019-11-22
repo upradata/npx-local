@@ -73,6 +73,9 @@ Object {
 exports[`Test => npmlocal --verbose --force [...local-projects] is package.json same snapshot 4`] = `
 Object {
   "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
+  "dependencies": Object {
+    "node-watch": "^0.6.3",
+  },
   "description": "",
   "license": "MIT",
   "local": Object {

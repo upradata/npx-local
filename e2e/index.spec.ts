@@ -1,11 +1,11 @@
 import { projectDir } from './util';
 import { readJsonAsync } from '../src/read-json5';
 import path from 'path';
-import { rm$ } from '../src/util/common';
 import { LocalInstallPackageJsonType } from '../src/package-json';
 import { chain } from '@upradata/util';
 import { execNpmLocal, checkNodeModules, Dependency, checkLocalProp } from './common';
 import { projects } from './projects.config';
+import { remove } from 'fs-extra';
 
 
 // execSync(`cd ${root} && tsc`);
@@ -33,7 +33,7 @@ describe('Test => npmlocal --verbose --force [...local-projects]', () => {
 
     beforeAll(async () => {
         jest.setTimeout(30000);
-        await Promise.all([ 1, 2, 3, 4 ].map(i => rm$(path.join(projectDir(i), 'node_modules')).catch(console.warn)));
+        await Promise.all([ 1, 2, 3, 4 ].map(i => remove(path.join(projectDir(i), 'node_modules')).catch(console.warn)));
         await execNpmLocal(1, [ 2, 3, 4 ]);
         await execNpmLocal(4, [ 1, 2, 3 ]);
     });
@@ -65,7 +65,7 @@ describe('Test => npmlocal in current npm package', () => {
 
     beforeAll(async () => {
         jest.setTimeout(30000);
-        await rm$(path.join(projectDir(4), 'node_modules')).catch(console.warn);
+        await remove(path.join(projectDir(4), 'node_modules')).catch(console.warn);
         await execNpmLocal(4);
     });
 

@@ -1,46 +1,82 @@
 
 import { chain, isDefined } from '@upradata/util';
 import path from 'path';
-import { copy, Stats } from 'fs-extra';
+import { copy, Stats, remove, ensureSymlink } from 'fs-extra';
 import { NpmProject } from './node-project';
-import { lstat$, stringAlignCenter, terminalWidth } from './util/common';
-import { yellow, green, colors, fullWidthBg } from './util/colors';
+import { stringAlignCenter, terminalWidth } from './util/common';
+import { yellow, green, colors, fullWidthBg, blue, highlightCyan, cyan } from './util/colors';
 import { isUndefined } from 'util';
 import { OriginalAbsolute, SourceDest, Skipped, isSkipped } from './types';
+import { InstallMode } from './local-install.options';
+import { lstat$ } from './util/promisify';
+import watch, { ImprovedFSWatcher } from 'node-watch';
 
 
 
 
-export interface CopiedFiles {
-    dest: NpmProject;
-    files: (SourceDest<OriginalAbsolute> | Skipped)[];
+export class CopiedFiles {
+    files = new Set<(SourceDest<OriginalAbsolute> | Skipped)>();
+
+    constructor(public dest: NpmProject) { }
+
+    removeFiles(...files: OriginalAbsolute[]) {
+        for (const file of files) {
+            const i = [ ...this.files.values() ].findIndex(f => !isSkipped(f) && f.source.absolute === file.absolute);
+            if (i !== -1)
+                [ ...this.files.values() ].splice(i, 1);
+        }
+    }
 }
 
+export type FilesToBeInstalled = Map<string, OriginalAbsolute>;
+
+
+export class LogOptions {
+    title: boolean = true;
+    indent: boolean = true;
+}
+
+export class FilesInstallerOptions {
+    destNpmProject: NpmProject;
+    localDepProject: NpmProject;
+    mode: InstallMode = 'link';
+    verbose?: number = 0;
+}
+
+
 export class FilesInstaller {
-
-    public filesToBeInstalled = new Map<string, OriginalAbsolute>();
     public installedFiles: CopiedFiles;
+    private watcher: ImprovedFSWatcher;
+    private pathType: keyof OriginalAbsolute;
+    public destNpmProject: NpmProject;
+    public localDepProject: NpmProject;
+    public mode: InstallMode;
+    public verbose: number;
 
 
-    constructor(public npmProject: NpmProject) { }
+    constructor(options: FilesInstallerOptions) {
+        Object.assign(this, new FilesInstallerOptions(), options);
+        this.pathType = this.verbose > 1 ? 'absolute' : 'original';
+        this.installedFiles = new CopiedFiles(this.destNpmProject);
+    }
 
 
-    private add(...files: string[]) {
+    private add(filesToBeInstalled: FilesToBeInstalled, ...files: string[]) {
         for (const file of files) {
             if (isDefined(file)) {
-                const f = file.startsWith('/') ? file : this.npmProject.absolutePath(file);
-                this.filesToBeInstalled.set(f, {
-                    original: path.join(this.npmProject.projectPath.original, path.basename(file)),
-                    absolute: f
+                const absolute = file.startsWith('/') ? file : this.localDepProject.absolutePath(file);
+
+                filesToBeInstalled.set(absolute, {
+                    original: this.localDepProject.originalPath(path.basename(file)),
+                    absolute
                 });
             }
         }
     }
 
-
     private async stats(file: string): Promise<{ file: string, stats: Stats; }> {
         if (isDefined(file)) {
-            const f = file.startsWith('/') ? file : this.npmProject.absolutePath(file);
+            const f = file.startsWith('/') ? file : this.localDepProject.absolutePath(file);
 
             return lstat$(f).then(stats => ({ file, stats })).catch(e => {
                 // to create a stack that has not been created by the lstat call
@@ -52,60 +88,61 @@ export class FilesInstaller {
     }
 
     public async readFilesToBeInstalled() {
-        const { main, module, files, types, typings } = await this.npmProject.getPackageJson();
+        const { main, module, files, types, typings } = await this.localDepProject.getPackageJson(true);
 
-        this.add('package.json');
-        this.add(types);
-        this.add(typings);
+        const filesToBeInstalled: FilesToBeInstalled = new Map<string, OriginalAbsolute>();
+        const add: (...files: string[]) => void = this.add.bind(this, filesToBeInstalled);
+
+        add('package.json');
+        add(types);
+        add(typings);
 
 
         if (chain(() => files.length, 0) > 0)
-            this.add(...files); // .map(file => this.npmProject.absolutePath(file)));
+            add(...files);
 
         const mainFiles = [ main, module ].filter(file => !!file).map(file => this.stats(file));
 
         for await (const { file, stats } of await Promise.all(mainFiles)) {
             if (isDefined(file)) {
                 if (stats.isDirectory())
-                    this.add(file);
+                    add(file);
                 else
-                    this.add(path.dirname(file));
+                    add(path.dirname(file));
             }
         }
+
+        return filesToBeInstalled;
     }
 
-    public async copyFiles(destNpmProject: NpmProject): Promise<CopiedFiles> {
-        await this.readFilesToBeInstalled();
+    public async copyFiles(filesToBeInstalled?: FilesToBeInstalled): Promise<CopiedFiles> {
+        const filesToBeCopied = filesToBeInstalled || await this.readFilesToBeInstalled();
+        const copiedFiles = new CopiedFiles(this.destNpmProject);
 
-        if (this.filesToBeInstalled.size === 0) {
-            this.installedFiles = {
-                dest: destNpmProject,
-                files: [
-                    {
-                        skipped: true,
-                        reason: `no files to be installed in ${this.npmProject.projectPath.absolute}`
-                    }
-                ]
-            };
+        if (filesToBeCopied.size === 0) {
+            const projectPath = this.verbose > 1 ? this.localDepProject.projectPath.absolute : this.localDepProject.projectPath.original;
+
+            copiedFiles.files.add({
+                skipped: true,
+                reason: `no files to be installed in ${projectPath}`
+            });
 
         } else {
 
-            const nodeModulePackage = path.join('node_modules', this.npmProject.packageJson.json.name);
+            const dest = this.destNpmProject.path('node_modules', this.localDepProject.packageJson.json.name);
 
-            const dest: OriginalAbsolute = {
-                absolute: path.join(destNpmProject.projectPath.absolute, nodeModulePackage),
-                original: path.join(destNpmProject.projectPath.original, nodeModulePackage)
-            };
-
+            await remove(dest.absolute).catch(console.warn);
 
             const copyPromises: Promise<SourceDest<OriginalAbsolute> | Skipped>[] = [];
 
-            for (const fileOrDir of this.filesToBeInstalled.values()) {
+            for (const fileOrDir of filesToBeCopied.values()) {
 
-                const destination = path.join(dest.absolute, path.basename(fileOrDir.absolute));
+                const destination = path.join(dest.absolute, path.basename(fileOrDir.original));
+
+                const copyOrLink = this.copyOrLink(fileOrDir.absolute, destination);
 
                 copyPromises.push(
-                    copy(fileOrDir.absolute, destination, { preserveTimestamps: true, overwrite: true }).then(() => {
+                    copyOrLink.then(() => {
                         return { source: fileOrDir, dest };
                     }).catch(e => {
                         // create stack
@@ -119,35 +156,162 @@ export class FilesInstaller {
                 );
             }
 
-            this.installedFiles = { dest: destNpmProject, files: await Promise.all(copyPromises) };
-
+            for await (const file of await Promise.all(copyPromises))
+                copiedFiles.files.add(file);
         }
-        return this.installedFiles;
+
+        for (const file of copiedFiles.files)
+            this.installedFiles.files.add(file);
+
+        return copiedFiles;
     }
 
-    logInstalledFiles() {
-        if (isUndefined(this.installedFiles))
+    private copyOrLink(source: string, destination: string) {
+        return this.mode === 'copy' ?
+            copy(source, destination, { preserveTimestamps: true, overwrite: true }) :
+            ensureSymlink(source, destination);
+    }
+
+    public startWatch() {
+        if (!this.installedFiles)
             return;
 
-        const source = this.npmProject;
-        const dest = this.installedFiles.dest;
+        for (const fileOrDir of this.installedFiles.files) {
 
-        const localInstalled = stringAlignCenter(
-            `${this.npmProject.packageJson.json.name} ("${source.projectPath.original}") installed in ${dest.packageJson.json.name} ("${dest.projectPath.original}")`, terminalWidth
-        );
+            if (!isSkipped(fileOrDir)) {
+                const destination = this.installedFiles.dest.path('node_modules', this.localDepProject.packageJson.json.name);
+                this.watcher = watch(fileOrDir.source.absolute, { recursive: false }, async (event, name) => {
+                    const relativeFile = path.relative(this.localDepProject.projectPath.absolute, name);
+                    const filename = this.localDepProject.path(relativeFile)[ this.pathType ];
 
-        console.log(
-            fullWidthBg(colors.bgGreen.$), '\n\n',
-            colors.white.bold.$`${localInstalled}`, '\n',
-            fullWidthBg(colors.bgGreen.$),
-            '\n'
-        );
+                    console.log(green`${event}: file "${filename}"`);
+
+                    // check if package.json has new local dependencies
+                    if (path.basename(fileOrDir.source.original) === 'package.json') {
+                        const { newFilesToBeInstalled, removedFiles } = await this.checkNewOrRemovedFilesToBeInstalled();
+
+                        if (newFilesToBeInstalled) {
+                            console.log(colors.green.bold.$`\nNews files detected in project: ${this.localDepProject.packageJson.json.name}\n`);
+
+                            this.copyFiles(newFilesToBeInstalled).then(copiedFiles =>
+                                this.logInstalledFiles({ title: false, indent: false }, copiedFiles)
+                            );
+                        }
+
+                        if (removedFiles) {
+                            this.removeFiles(...[ ...removedFiles ]);
+                        }
+
+                        return;
+                    }
+
+                    if (event === 'remove') {
+                        // creates a loop
+                        // this.removeFiles(this.localDepProject.path((relativeFile)));
+                    }
+                    else if (event === 'update') {
+                        this.copyOrLink(name, destination.absolute).then(() => {
+                            console.log(blue`"${filename}" ${this.mode === 'copy' ? 'copied' : 'linked'} in ${destination[ this.pathType ]}`);
+                        });
+                    }
+                });
+            }
+        }
+
+    }
+
+    private async removeFiles(...absoluteFiles: OriginalAbsolute[]) {
+        const removedFiles = await Promise.all(absoluteFiles.map(async file => { await remove(file.absolute); return file; }));
+        const destination = this.installedFiles.dest.path('node_modules', this.localDepProject.packageJson.json.name);
+
+        this.installedFiles.removeFiles(...removedFiles);
+
+        for (const file of removedFiles)
+            console.log(blue`"${file[ this.pathType ]}" has been deleted from ${destination[ this.pathType ]}`);
+    }
+
+
+    private async checkNewOrRemovedFilesToBeInstalled() {
+        const filesToBeInstalled = await this.readFilesToBeInstalled();
+        const newFilesToBeInstalled: FilesToBeInstalled = new Map();
+        const removedFiles = new Set<OriginalAbsolute>();
+        const destination = this.installedFiles.dest.path('node_modules', this.localDepProject.packageJson.json.name);
+
+        for (const toBeInstalled of filesToBeInstalled.values()) {
+
+            const dep = [ ...this.installedFiles.files ].find(file => {
+                if (!isSkipped(file)) {
+                    if (file.source.absolute === toBeInstalled.absolute)
+                        return true;
+                }
+            });
+
+            if (!dep) {
+                // a new local dependency has to be installed
+                this.add(newFilesToBeInstalled, toBeInstalled.absolute);
+            }
+        }
 
         for (const file of this.installedFiles.files) {
+            if (!isSkipped(file)) {
+
+                const foundDep = [ ...filesToBeInstalled.values() ].find(toBeInstalled => {
+                    if (file.source.absolute === toBeInstalled.absolute)
+                        return true;
+                });
+
+                if (!foundDep) {
+                    // a new local dependency has to be installed
+                    removedFiles.add({
+                        original: path.join(destination.original, path.basename(file.source.original)),
+                        absolute: path.join(destination.absolute, path.basename(file.source.original))
+                    });
+                }
+            }
+        }
+
+        return {
+            newFilesToBeInstalled: newFilesToBeInstalled.size === 0 ? undefined : newFilesToBeInstalled,
+            removedFiles: removedFiles.size === 0 ? undefined : removedFiles
+        };
+    }
+
+    public stopWatch() {
+        this.watcher.close();
+    }
+
+    public logInstalledFiles(options?: Partial<LogOptions>, installedFiles?: CopiedFiles) {
+        const o = Object.assign(new LogOptions(), options);
+
+        const filesInstalled = installedFiles || this.installedFiles;
+
+        if (isUndefined(filesInstalled))
+            return;
+
+        const source = this.localDepProject;
+        const dest = filesInstalled.dest;
+
+        if (o.title) {
+            const localInstalled = stringAlignCenter(
+                // tslint:disable-next-line: max-line-length
+                `${this.localDepProject.packageJson.json.name} ("${source.projectPath[ this.pathType ]}") installed in ${dest.packageJson.json.name} ("${dest.projectPath[ this.pathType ]}")`, terminalWidth
+            );
+
+            console.log(
+                fullWidthBg(colors.bgGreen.$), '\n\n',
+                colors.white.bold.$`${localInstalled}`, '\n',
+                fullWidthBg(colors.bgGreen.$),
+                '\n'
+            );
+        }
+
+        const indent = o.indent ? '    - ' : '';
+
+        for (const file of filesInstalled.files) {
             if (isSkipped(file))
-                console.log(yellow`    - Could not install package ${source.projectPath.absolute}:\n "${file.reason}"`);
+                console.log(yellow`${indent}Could not install package ${source.projectPath[ this.pathType ]}:\n "${file.reason}"`);
             else
-                console.log(green`    - "${file.source.original}" installed in "${file.dest.original}"`);
+                console.log(green`${indent}"${file.source[ this.pathType ]}" installed in "${file.dest[ this.pathType ]}"`);
         }
 
         console.log('\n');

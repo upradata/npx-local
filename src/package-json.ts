@@ -64,8 +64,8 @@ export class LocalInstallPackageJson {
         return pathExists(await this.path.async);
     }
 
-    async readJson() {
-        if (!this.json) {
+    async readJson(force: boolean = false) {
+        if (!this.json || force) {
             const json = await readJsonAsync(await this.path.async);
             this.json = json as LocalInstallPackageJson;
         }

@@ -5,5 +5,5 @@ import { processArgs } from './yargs';
 import { green } from './util/colors';
 
 new LocalInstall(processArgs()).install().then(() => {
-    console.log(green`\n\nFinished!`);
+    // console.log(green`\n\Local dependencies installed!`);
 });
