@@ -4,6 +4,11 @@ import { red } from './util/colors';
 import camelcase from 'camelcase';
 import { ObjectOf } from '@upradata/util';
 
+export interface InvalidParameter {
+    parameter: string;
+    reason: string;
+}
+
 class _ParseArgs<T> {
     public supportedArgs = [ '$0', '_', 'version', 'help' ];
     public yargs: Argv<T>;
@@ -12,12 +17,19 @@ class _ParseArgs<T> {
         // set inheritance
         this.yargs = yargs(process.argv.slice(2), undefined, require) as Argv<T>;
         // yargs does not use a prototype
-        const proto = Object.getPrototypeOf(this);
+        let proto = Object.getPrototypeOf(this);
+        while (_ParseArgs !== proto.constructor) {
+            proto = Object.getPrototypeOf(proto);
+        }
         Object.setPrototypeOf(proto, this.yargs);
 
     }
 
-    option(name: string, options?: Options) {
+    public option(name: string, options?: Options) {
+        // yargs add camel case option name already
+        // we add it just in supportedArgs
+        this.yargs.option(name, options);
+
         const args: string[] = [ name ];
 
         const camelArg = camelcase(name);
@@ -25,7 +37,6 @@ class _ParseArgs<T> {
             args.push(camelArg);
 
         for (const arg of args) {
-            this.yargs.option(arg, options);
             this.supportedArgs.push(arg);
         }
 
@@ -36,31 +47,30 @@ class _ParseArgs<T> {
         return this;
     }
 
-    options(keys: ObjectOf<Options>) {
+    public options(keys: ObjectOf<Options>) {
         for (const [ key, options ] of Object.entries(keys))
             this.option(key, options);
 
         return this;
     }
 
-    public unvalidParams(argv: Arguments<any>) {
-        const unvalidParams = [];
+    public invalidParams(argv: Arguments<any>): InvalidParameter[] {
+        const unvalidParams: InvalidParameter[] = [];
 
         for (const arg of Object.keys(argv)) {
             if (!this.supportedArgs.includes(arg))
-                unvalidParams.push(arg);
+                unvalidParams.push({ parameter: arg, reason: `Invalid option` });
         }
 
-        return unvalidParams.length === 0 ? undefined : unvalidParams;
+        return unvalidParams.length === 0 ? [] : unvalidParams;
     }
 
-    public unvalidParamsAndExit(argv: Arguments<any>) {
-        const unvalidOptions = this.unvalidParams(argv);
+    public invalidParamsAndExit(argv: Arguments<any>) {
+        const invalidParams = this.invalidParams(argv);
 
-        if (unvalidOptions !== undefined) {
-            console.error(red`The following options are not accepted:`);
-            for (const arg of unvalidOptions)
-                console.error(red`  -${arg}`);
+        if (invalidParams.length > 0) {
+            for (const { parameter, reason } of invalidParams)
+                console.error(red`  - parameter ${parameter}: ${reason}`);
 
             console.log();
             this.yargs.showHelp();

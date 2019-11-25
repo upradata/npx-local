@@ -12,7 +12,6 @@ import { remove } from 'fs-extra';
 
 async function checkLocalDependencies(projectI: number, deps: Dependency[]) {
     const packageJson = await readJsonAsync(path.join(projectDir(projectI), 'package.json')) as LocalInstallPackageJsonType;
-    // console.log({ projectI, deps });
     checkLocalProp(chain(() => packageJson.local.dependencies), deps.map(dep => dep.projectI));
     await checkNodeModules(projectI, deps);
 }

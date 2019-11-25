@@ -1,16 +1,62 @@
 
-import { LocalInstallOptions } from './local-install.options';
+import { isInstallMode, LocalInstallOptions, LocalPackage, InstallModes } from './local-install.options';
 import { readJsonSync } from './read-json5';
 import findUp from 'find-up';
-import { ParseArgs } from './parse-args';
+import { ParseArgs, InvalidParameter } from './parse-args';
+import yargsParser from 'yargs-parser';
+import { Arguments } from 'yargs';
 
-export interface ProgramArgv extends LocalInstallOptions {
+
+export interface ProgramArgv extends LocalInstallOptions<string> {
+    'project-dir': string;
     'install-dir': string;
     help: boolean;
 }
 
-export function processArgs() {
-    const yargs = new ParseArgs<ProgramArgv>() as ParseArgs<ProgramArgv>;
+
+export class ParseNpmLocalArgs extends ParseArgs<ProgramArgv>{
+    private _localPackages: LocalPackage[] = [];
+
+    constructor() {
+        super();
+    }
+
+    public get localPackages() {
+        return this._localPackages;
+    }
+
+    public processLocalPackages() {
+        const argv = (this.yargs.parsed as yargsParser.DetailedArguments).argv as any as Arguments<ProgramArgv>;
+
+        const localPackages = argv.localPackages = argv.localPackages || argv._ || [];
+        const invalidLocalPackages: InvalidParameter[] = [];
+
+        for (let i = 0; i < argv.localPackages.length; ++i) {
+            const local = localPackages[ i ];
+
+            localPackages[ i ] = local.trim();
+            const [ path, mode ] = local.split(':');
+            if (mode && !isInstallMode(mode)) {
+                invalidLocalPackages.push({
+                    parameter: 'mode',
+                    reason: `mode ${mode} in "${local}" is not a valid mode. Valid modes are ${Object.keys(new InstallModes())}`
+                });
+            }
+
+            this.localPackages.push({ path, mode: mode as any });
+        }
+
+        return invalidLocalPackages;
+    }
+
+    public invalidParams(argv: Arguments<any>) {
+        const invalidLocalPackages = this.processLocalPackages();
+        return [ ...invalidLocalPackages, ...super.invalidParams(argv) ];
+    }
+}
+
+export function processArgs(): Arguments<LocalInstallOptions<LocalPackage>> {
+    const yargs = new ParseNpmLocalArgs() as (ParseNpmLocalArgs & ParseArgs<ProgramArgv>);
 
     // Does not work as expectd. To permissive
     // yargs.strict(true);
@@ -24,11 +70,18 @@ export function processArgs() {
         describe: 'Local packages to install'
     });
 
-    yargs.option('install-dir', {
+    yargs.option('project-dir', {
         type: 'string',
         default: './',
-        alias: 'd',
-        describe: 'Directory where to install local packages'
+        alias: 'p',
+        describe: 'Directory of project where to install local dependencies'
+    });
+
+    yargs.option('install-dir', {
+        type: 'string',
+        default: 'node_modules',
+        alias: 'i',
+        describe: 'Directory where to install local packages (node_modules per default)'
     });
 
     yargs.option('mode', {
@@ -81,12 +134,8 @@ export function processArgs() {
 
     console.log('Npm Local Install\n');
 
-    yargs.unvalidParamsAndExit(argv);
+    yargs.invalidParamsAndExit(argv);
 
-    const localPackages = argv.localPackages = argv.localPackages || argv._ || [];
 
-    for (let i = 0; i < argv.localPackages.length; ++i)
-        localPackages[ i ] = localPackages[ i ].trim();
-
-    return argv;
+    return { ...argv, localPackages: yargs.localPackages };
 }

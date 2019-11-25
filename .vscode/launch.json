@@ -67,19 +67,20 @@
         {
             "type": "node",
             "request": "launch",
-            "name": "npmlocal --verbose --force ../Project1 ../Project2 ../Project3",
+            "name": "npmlocal --verbose --force ../Project1:copy ../Project2 ../Project3",
             "program": "${workspaceFolder}/lib/index.js",
             "args": [
                 "--verbose",
                 "--force",
-                "../Project1",
+                "-i",
+                "local_modules",
+                "../Project1:copy",
                 "../Project2",
                 "../Project3"
             ],
             "outFiles": ["${workspaceFolder}/lib/**/*.js"],
             "cwd": "${workspaceFolder}/TestProjects/Project4"
         },
-        ,
         {
             "type": "node",
             "request": "launch",

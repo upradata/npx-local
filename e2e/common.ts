@@ -5,6 +5,7 @@ import path from 'path';
 import { readdir } from 'fs-extra';
 import { LocalInstallPackageJsonType } from '../src/package-json';
 import { ObjectOf } from '@upradata/util';
+import { DependencyDetail } from '../src/local-dependency';
 
 
 export interface Dependency {
@@ -16,8 +17,7 @@ export function execNpmLocal(projectI: number, deps: number[] = []) {
     const packageJson = readJsonAsync(path.join(projectDir(projectI), 'package.json')) as LocalInstallPackageJsonType;
     delete packageJson.local;
 
-    const localDeps = deps.reduce((paths, j) => paths + ` ../Project${j}`, '');
-
+    const localDeps = deps.map((i, j) => `../Project${i}${(j === 0) ? ':copy' : ''}`).join(' ');
     const command = `${localInstall} --verbose --force ${localDeps}`;
     console.log(green`Executing: ${command} in ${projectDir(projectI)}`);
     return execAsyncCommand(command, { cwd: projectDir(projectI) });
@@ -42,14 +42,14 @@ export async function checkNodeModules(projectI: number, deps: Dependency[]) {
 }
 
 
-export function checkLocalProp(localProp: ObjectOf<string>, deps: number[]) {
+export function checkLocalProp(localProp: ObjectOf<string | DependencyDetail>, deps: number[]) {
 
     expect(localProp).toBeDefined();
 
     if (!localProp)
         return;
 
-    const packages = Object.entries(localProp).map(([ k, v ]) => ({ name: k, path: v }));
+    const packages = Object.entries(localProp).map(([ k, v ]) => ({ name: k, dependency: v }));
 
     expect(packages.length).toBe(deps.length);
 
@@ -57,6 +57,12 @@ export function checkLocalProp(localProp: ObjectOf<string>, deps: number[]) {
         expect(packages.map(d => d.name).includes(`project${depI}`)).toBe(true);
 
         const projectPath = path.join(testProjectsDir, `Project${depI}`);
-        expect(packages.map(d => d.path).find(p => p.startsWith(`${projectPath}`))).toBeDefined();
+        expect(packages.map(d => d.dependency).find(dep => {
+            let path = typeof dep === 'string' ? dep : dep.path;
+            if (path.split(':').length === 2)
+                path = path.split(':')[ 1 ];
+
+            return path.startsWith(`${projectPath}`);
+        })).toBeDefined();
     }
 }

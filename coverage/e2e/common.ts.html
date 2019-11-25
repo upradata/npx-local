@@ -20,14 +20,14 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">97.37% </span>
+        <span class="strong">97.56% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>37/38</span>
+        <span class='fraction'>40/41</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">80% </span>
+        <span class="strong">81.82% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>4/5</span>
+        <span class='fraction'>9/11</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
@@ -35,9 +35,9 @@
         <span class='fraction'>9/9</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">96.88% </span>
+        <span class="strong">97.22% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>31/32</span>
+        <span class='fraction'>35/36</span>
       </div>
     </div>
     <p class="quiet">
@@ -108,11 +108,18 @@
 <a name='L60'></a><a href='#L60'>60</a>
 <a name='L61'></a><a href='#L61'>61</a>
 <a name='L62'></a><a href='#L62'>62</a>
-<a name='L63'></a><a href='#L63'>63</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L63'></a><a href='#L63'>63</a>
+<a name='L64'></a><a href='#L64'>64</a>
+<a name='L65'></a><a href='#L65'>65</a>
+<a name='L66'></a><a href='#L66'>66</a>
+<a name='L67'></a><a href='#L67'>67</a>
+<a name='L68'></a><a href='#L68'>68</a>
+<a name='L69'></a><a href='#L69'>69</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -127,7 +134,6 @@
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -168,6 +174,12 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-yes">37x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-yes">18x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { green } from '../src/util/colors';
@@ -177,6 +189,7 @@ import path from 'path';
 import { readdir } from 'fs-extra';
 import { LocalInstallPackageJsonType } from '../src/package-json';
 import { ObjectOf } from '@upradata/util';
+import { DependencyDetail } from '../src/local-dependency';
 &nbsp;
 &nbsp;
 export interface Dependency {
@@ -188,8 +201,7 @@ export function execNpmLocal(projectI: number, deps: number[] = []) {
     const packageJson = readJsonAsync(path.join(projectDir(projectI), 'package.json')) as LocalInstallPackageJsonType;
     delete packageJson.local;
 &nbsp;
-    const localDeps = deps.reduce((paths, j) =&gt; paths + ` ../Project${j}`, '');
-&nbsp;
+    const localDeps = deps.map((i, j) =&gt; `../Project${i}${(j === 0) ? ':copy' : ''}`).join(' ');
     const command = `${localInstall} --verbose --force ${localDeps}`;
     console.log(green`Executing: ${command} in ${projectDir(projectI)}`);
     return execAsyncCommand(command, { cwd: projectDir(projectI) });
@@ -214,14 +226,14 @@ export async function checkNodeModules(projectI: number, deps: Dependency[]) {
 }
 &nbsp;
 &nbsp;
-export function checkLocalProp(localProp: ObjectOf&lt;string&gt;, deps: number[]) {
+export function checkLocalProp(localProp: ObjectOf&lt;string | DependencyDetail&gt;, deps: number[]) {
 &nbsp;
     expect(localProp).toBeDefined();
 &nbsp;
     <span class="missing-if-branch" title="if path not taken" >I</span>if (!localProp)
 <span class="cstat-no" title="statement not covered" >        return;</span>
 &nbsp;
-    const packages = Object.entries(localProp).map(([ k, v ]) =&gt; ({ name: k, path: v }));
+    const packages = Object.entries(localProp).map(([ k, v ]) =&gt; ({ name: k, dependency: v }));
 &nbsp;
     expect(packages.length).toBe(deps.length);
 &nbsp;
@@ -229,7 +241,13 @@ export function checkLocalProp(localProp: ObjectOf&lt;string&gt;, deps: number[]
         expect(packages.map(d =&gt; d.name).includes(`project${depI}`)).toBe(true);
 &nbsp;
         const projectPath = path.join(testProjectsDir, `Project${depI}`);
-        expect(packages.map(d =&gt; d.path).find(p =&gt; p.startsWith(`${projectPath}`))).toBeDefined();
+        expect(packages.map(d =&gt; d.dependency).find(dep =&gt; {
+            let path = typeof dep === 'string' ? dep : <span class="branch-1 cbranch-no" title="branch not covered" >dep.path;</span>
+            if (path.split(':').length === 2)
+                path = path.split(':')[ 1 ];
+&nbsp;
+            return path.startsWith(`${projectPath}`);
+        })).toBeDefined();
     }
 }
 &nbsp;</pre></td></tr>
@@ -238,7 +256,7 @@ export function checkLocalProp(localProp: ObjectOf&lt;string&gt;, deps: number[]
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Fri Nov 22 2019 15:12:23 GMT+0100 (GMT+01:00)
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Mon Nov 25 2019 16:17:53 GMT+0100 (GMT+01:00)
 </div>
 </div>
 <script src="../prettify.js"></script>

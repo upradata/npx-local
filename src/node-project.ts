@@ -4,19 +4,17 @@ import { writeJSON } from 'fs-extra';
 import { OriginalAbsolute } from './types';
 import { LocalInstallPackageJson } from './package-json';
 import { readdir$ } from './util/promisify';
+import { LocalDependency } from './local-dependency';
+import { InstallMode } from './local-install.options';
 
-
-export interface Dependency {
-    name: string;
-    version: string;
-}
 
 export class NpmProject {
     public packageJson: LocalInstallPackageJson;
     public projectPath: OriginalAbsolute;
+    public _installDir: string;
 
 
-    constructor(projectPath: string) {
+    constructor(projectPath: string, public mode?: InstallMode) {
         this.projectPath = {
             original: projectPath,
             absolute: path.resolve(process.cwd(), projectPath)
@@ -25,12 +23,27 @@ export class NpmProject {
         this.packageJson = new LocalInstallPackageJson(this.projectPath.absolute);
     }
 
+    public isLocalPackage() {
+        return /^(\.|\/)/.test(this.projectPath.original);
+    }
+
+    public get installDir() {
+        if (!this._installDir)
+            throw new Error(`Project in ${this.projectPath.absolute} is not an installation project`);
+
+        return this._installDir;
+    }
+
+    public set installDir(installDir: string) {
+        this._installDir = installDir;
+    }
+
     public async getPackageJson(force?: boolean) {
         return this.packageJson.readJson(force);
     }
 
-    public async nodeModulesFiles(): Promise<string[]> {
-        return readdir$(this.absolutePath('node_modules')).catch(e => []);
+    public async filesInInstallDir(installDir?: string): Promise<string[]> {
+        return readdir$(this.absolutePath(installDir || this.installDir)).catch(e => []);
     }
 
     public absolutePath(...filepaths: string[]) {
@@ -48,8 +61,8 @@ export class NpmProject {
         };
     }
 
-    public get nodeModulesPath(): OriginalAbsolute {
-        return this.path('node_modules');
+    public get installDirPath(): OriginalAbsolute {
+        return this.path(this.installDir);
     }
 
     public async loadProject() {
@@ -63,24 +76,33 @@ export class NpmProject {
         return !!projectJson.localDepencies[ localJson.name ];
     }
 
-    public async localDependency(name: string): Promise<Dependency> {
-        const dep: string = (await this.packageJson.localProp('dependencies'))[ name ];
+    public async localDependencyInPackageJson(name: string): Promise<LocalDependency> {
+        const dep: string = (await this.packageJson.localProp('dependencies').async)[ name ];
 
         if (!dep)
             return undefined;
 
-        const [ depName, version ] = dep.split('@');
-        return { name: depName, version };
+        return new LocalDependency(dep);
     }
 
-    public async addLocalDependency(dependency: NpmProject) {
+    public async addLocalDependency(args: { dependency: NpmProject, installDir: string; }) {
+        const { dependency, installDir } = args;
+
         const projectJson = await this.getPackageJson();
         const depJson = await dependency.getPackageJson();
 
         const projectDeps = await this.packageJson.localProp('dependencies').async;
         const depUsedBy = await dependency.packageJson.localProp('usedBy').async;
 
-        projectDeps[ depJson.name ] = dependency.projectPath.absolute + `@${dependency.packageJson.json.version}`;
+
+        const dep = await this.localDependencyInPackageJson(depJson.name) ||
+            new LocalDependency(
+                { installDir, path: dependency.projectPath.absolute },
+                { version: dependency.packageJson.json.version, mode: this.mode }
+            );
+
+
+        projectDeps[ depJson.name ] = dep.packageJsonPath();
         depUsedBy[ projectJson.name ] = this.projectPath.absolute;
     }
 

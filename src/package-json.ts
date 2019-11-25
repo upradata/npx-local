@@ -3,9 +3,10 @@ import { ObjectOf } from '@upradata/util';
 import { readJsonAsync } from './read-json5';
 import { pathExists } from 'fs-extra';
 import findUp from 'find-up';
+import { Dependency } from './local-dependency';
 
 export class Local {
-    dependencies?: ObjectOf<string>;
+    dependencies?: ObjectOf<Dependency>;
     usedBy?: ObjectOf<string>;
 }
 
@@ -86,7 +87,7 @@ export class LocalInstallPackageJson {
 
     public getLocalProp(prop: keyof Local, mode: keyof SyncAsync) {
         const localProp = (local: Local, prop: keyof Local) => {
-            local[ prop ] = local[ prop ] || {};
+            local[ prop ] = local[ prop ] || {} as any;
             return local[ prop ];
         };
 
