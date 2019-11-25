@@ -6,6 +6,17 @@
     "configurations": [
         {
             "type": "node",
+            "name": "Jest e2e",
+            "request": "launch",
+            "program": "${workspaceFolder}/node_modules/jest/bin/jest",
+            "args": ["--runInBand", "--config", "jest-e2e.config.js"],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "openOnFirstSessionStart",
+            "disableOptimisticBPs": true
+        },
+        {
+            "type": "node",
             "request": "launch",
             "name": "Launch tscflatten",
             "program": "${workspaceFolder}/src/tscflatten.js",

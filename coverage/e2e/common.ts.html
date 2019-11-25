@@ -20,14 +20,14 @@
     </h1>
     <div class='clearfix'>
       <div class='fl pad1y space-right2'>
-        <span class="strong">97.56% </span>
+        <span class="strong">97.62% </span>
         <span class="quiet">Statements</span>
-        <span class='fraction'>40/41</span>
+        <span class='fraction'>41/42</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">81.82% </span>
+        <span class="strong">85.71% </span>
         <span class="quiet">Branches</span>
-        <span class='fraction'>9/11</span>
+        <span class='fraction'>12/14</span>
       </div>
       <div class='fl pad1y space-right2'>
         <span class="strong">100% </span>
@@ -35,9 +35,9 @@
         <span class='fraction'>9/9</span>
       </div>
       <div class='fl pad1y space-right2'>
-        <span class="strong">97.22% </span>
+        <span class="strong">97.3% </span>
         <span class="quiet">Lines</span>
-        <span class='fraction'>35/36</span>
+        <span class='fraction'>36/37</span>
       </div>
     </div>
     <p class="quiet">
@@ -114,7 +114,10 @@
 <a name='L66'></a><a href='#L66'>66</a>
 <a name='L67'></a><a href='#L67'>67</a>
 <a name='L68'></a><a href='#L68'>68</a>
-<a name='L69'></a><a href='#L69'>69</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L69'></a><a href='#L69'>69</a>
+<a name='L70'></a><a href='#L70'>70</a>
+<a name='L71'></a><a href='#L71'>71</a>
+<a name='L72'></a><a href='#L72'>72</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -131,10 +134,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -183,7 +189,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">import { green } from '../src/util/colors';
-import { projectDir, localInstall, readDepInNodeModules, testProjectsDir, execAsyncCommand } from './util';
+import { projectDir, localInstall, readProjectInInstallDir, testProjectsDir, execAsyncCommand } from './util';
 import { readJsonAsync } from '../src/read-json5';
 import path from 'path';
 import { readdir } from 'fs-extra';
@@ -197,28 +203,31 @@ export interface Dependency {
     files: string[];
 }
 &nbsp;
-export function execNpmLocal(projectI: number, deps: number[] = []) {
+export function execNpmLocal(projectI: number, deps: number[] = [], installDir?: string) {
     const packageJson = readJsonAsync(path.join(projectDir(projectI), 'package.json')) as LocalInstallPackageJsonType;
     delete packageJson.local;
 &nbsp;
+    const installDirOption = installDir ? `--install-dir ${installDir}` : '';
+&nbsp;
     const localDeps = deps.map((i, j) =&gt; `../Project${i}${(j === 0) ? ':copy' : ''}`).join(' ');
-    const command = `${localInstall} --verbose --force ${localDeps}`;
+    const command = `${localInstall} ${installDirOption} --verbose --force ${localDeps}`;
+&nbsp;
     console.log(green`Executing: ${command} in ${projectDir(projectI)}`);
     return execAsyncCommand(command, { cwd: projectDir(projectI) });
 }
 &nbsp;
 &nbsp;
 &nbsp;
-export async function checkNodeModules(projectI: number, deps: Dependency[]) {
-    const nodeModulesFiles = await readdir(path.join(projectDir(projectI), 'node_modules'));
+export async function checkInstallDir(projectI: number, deps: Dependency[], installDir: string = <span class="branch-0 cbranch-no" title="branch not covered" >'node_modules')</span> {
+    const installDirFiles = await readdir(path.join(projectDir(projectI), installDir));
 &nbsp;
     for (let i = 0; i &lt; 4; ++i) {
         if (i !== projectI)
-            expect(nodeModulesFiles.includes(`project${i}`));
+            expect(installDirFiles.includes(`project${i}`));
     }
 &nbsp;
     await Promise.all(deps.map(async dep =&gt; {
-        const nodeModulesFiles = await readDepInNodeModules(projectI, dep.projectI);
+        const nodeModulesFiles = await readdir(path.join(projectDir(projectI), installDir, `project${dep.projectI}`));
         expect(nodeModulesFiles.length === dep.files.length).toBe(true);
         for (const file of dep.files)
             expect(nodeModulesFiles.includes(file)).toBe(true);
@@ -242,7 +251,7 @@ export function checkLocalProp(localProp: ObjectOf&lt;string | DependencyDetail&
 &nbsp;
         const projectPath = path.join(testProjectsDir, `Project${depI}`);
         expect(packages.map(d =&gt; d.dependency).find(dep =&gt; {
-            let path = typeof dep === 'string' ? dep : <span class="branch-1 cbranch-no" title="branch not covered" >dep.path;</span>
+            let path = typeof dep === 'string' ? dep : dep.path;
             if (path.split(':').length === 2)
                 path = path.split(':')[ 1 ];
 &nbsp;
@@ -256,7 +265,7 @@ export function checkLocalProp(localProp: ObjectOf&lt;string | DependencyDetail&
 </div><!-- /wrapper -->
 <div class='footer quiet pad2 space-top1 center small'>
   Code coverage
-  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Mon Nov 25 2019 16:17:53 GMT+0100 (GMT+01:00)
+  generated by <a href="https://istanbul.js.org/" target="_blank">istanbul</a> at Mon Nov 25 2019 21:13:42 GMT+0100 (GMT+01:00)
 </div>
 </div>
 <script src="../prettify.js"></script>

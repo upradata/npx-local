@@ -6,6 +6,7 @@ import { LocalInstallPackageJson } from './package-json';
 import { readdir$ } from './util/promisify';
 import { LocalDependency } from './local-dependency';
 import { InstallMode } from './local-install.options';
+import { NpmProjectDependency } from './npmproject-dependencies';
 
 
 export class NpmProject {
@@ -14,7 +15,7 @@ export class NpmProject {
     public _installDir: string;
 
 
-    constructor(projectPath: string, public mode?: InstallMode) {
+    constructor(projectPath: string) {
         this.projectPath = {
             original: projectPath,
             absolute: path.resolve(process.cwd(), projectPath)
@@ -85,8 +86,9 @@ export class NpmProject {
         return new LocalDependency(dep);
     }
 
-    public async addLocalDependency(args: { dependency: NpmProject, installDir: string; }) {
-        const { dependency, installDir } = args;
+    public async addLocalDependency(npmProjectDependency: NpmProjectDependency) {
+        const dependency = npmProjectDependency.project;
+        const { mode, installDir } = npmProjectDependency.localDependency;
 
         const projectJson = await this.getPackageJson();
         const depJson = await dependency.getPackageJson();
@@ -95,11 +97,10 @@ export class NpmProject {
         const depUsedBy = await dependency.packageJson.localProp('usedBy').async;
 
 
-        const dep = await this.localDependencyInPackageJson(depJson.name) ||
-            new LocalDependency(
-                { installDir, path: dependency.projectPath.absolute },
-                { version: dependency.packageJson.json.version, mode: this.mode }
-            );
+        const dep = new LocalDependency(
+            { installDir, path: dependency.projectPath.absolute },
+            { version: dependency.packageJson.json.version, mode }
+        );
 
 
         projectDeps[ depJson.name ] = dep.packageJsonPath();

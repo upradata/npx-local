@@ -7,7 +7,7 @@ Object {
   "license": "MIT",
   "local": Object {
     "dependencies": Object {
-      "project2": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project2@0.0.1",
+      "project2": "copy:/home/milottit/Libraries/LocalInstallation/TestProjects/Project2@0.0.1",
       "project3": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project3@0.0.1",
       "project4": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project4@0.0.1",
     },
@@ -25,26 +25,6 @@ Object {
 `;
 
 exports[`Test => npmlocal --verbose --force [...local-projects] is package.json same snapshot 2`] = `
-Object {
-  "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
-  "description": "",
-  "license": "MIT",
-  "local": Object {
-    "usedBy": Object {
-      "project1": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project1",
-      "project4": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project4",
-    },
-  },
-  "module": "lib-esm/index.js",
-  "name": "project2",
-  "scripts": Object {
-    "test": "echo \\"Error: no test specified\\" && exit 1",
-  },
-  "version": "0.0.1",
-}
-`;
-
-exports[`Test => npmlocal --verbose --force [...local-projects] is package.json same snapshot 3`] = `
 Object {
   "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
   "description": "",
@@ -70,7 +50,7 @@ Object {
 }
 `;
 
-exports[`Test => npmlocal --verbose --force [...local-projects] is package.json same snapshot 4`] = `
+exports[`Test => npmlocal --verbose --force [...local-projects] is package.json same snapshot 3`] = `
 Object {
   "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
   "dependencies": Object {
@@ -80,9 +60,18 @@ Object {
   "license": "MIT",
   "local": Object {
     "dependencies": Object {
-      "project1": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project1@0.0.1",
-      "project2": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project2@0.0.1",
-      "project3": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project3@0.0.1",
+      "project1": Object {
+        "install-dir": "local_modules",
+        "path": "copy:/home/milottit/Libraries/LocalInstallation/TestProjects/Project1@0.0.1",
+      },
+      "project2": Object {
+        "install-dir": "local_modules",
+        "path": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project2@0.0.1",
+      },
+      "project3": Object {
+        "install-dir": "local_modules",
+        "path": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project3@0.0.1",
+      },
     },
     "usedBy": Object {
       "project1": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project1",
@@ -90,6 +79,26 @@ Object {
   },
   "main": "lib/index.js",
   "name": "project4",
+  "scripts": Object {
+    "test": "echo \\"Error: no test specified\\" && exit 1",
+  },
+  "version": "0.0.1",
+}
+`;
+
+exports[`Test => npmlocal --verbose --force [...local-projects] is package.json same snapshot 4`] = `
+Object {
+  "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
+  "description": "",
+  "license": "MIT",
+  "local": Object {
+    "usedBy": Object {
+      "project1": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project1",
+      "project4": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project4",
+    },
+  },
+  "module": "lib-esm/index.js",
+  "name": "project2",
   "scripts": Object {
     "test": "echo \\"Error: no test specified\\" && exit 1",
   },

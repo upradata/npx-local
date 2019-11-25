@@ -14,7 +14,7 @@
 		},
 		"dependencies": {
 			"project4": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project4@0.0.1",
-			"project2": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project2@0.0.1",
+			"project2": "copy:/home/milottit/Libraries/LocalInstallation/TestProjects/Project2@0.0.1",
 			"project3": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project3@0.0.1"
 		}
 	}

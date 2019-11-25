@@ -28,4 +28,3 @@ export const localInstall = fromRoot('lib/index.js');
 export const testProjectsDir = fromRoot('TestProjects');
 
 export const projectDir = (i: number) => path.join(testProjectsDir, `Project${i}`);
-export const readDepInNodeModules = (project: number, dep: number) => readdir(path.join(projectDir(project), `node_modules/project${dep}`));

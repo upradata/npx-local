@@ -37,7 +37,7 @@ export class LocalDependency {
 
         this.version = options.version || depVersion;
         this.sourcePath = sourcePath;
-        this.mode = options.mode || mode || 'link';
+        this.mode = mode || options.mode || 'link';
         this.installDir = dep.installDir || dep[ 'install-dir' ];
     }
 

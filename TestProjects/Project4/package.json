@@ -10,9 +10,18 @@
 	"license": "MIT",
 	"local": {
 		"dependencies": {
-			"project2": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project2@0.0.1",
-			"project3": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project3@0.0.1",
-			"project1": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project1@0.0.1"
+			"project2": {
+				"path": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project2@0.0.1",
+				"install-dir": "local_modules"
+			},
+			"project3": {
+				"path": "link:/home/milottit/Libraries/LocalInstallation/TestProjects/Project3@0.0.1",
+				"install-dir": "local_modules"
+			},
+			"project1": {
+				"path": "copy:/home/milottit/Libraries/LocalInstallation/TestProjects/Project1@0.0.1",
+				"install-dir": "local_modules"
+			}
 		},
 		"usedBy": {
 			"project1": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project1"
