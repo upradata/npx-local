@@ -7,6 +7,7 @@ import { LocalInstallOptions, LocalPackage } from './local-install.options';
 import path from 'path';
 import { LocalDependency } from './local-dependency';
 import { NpmProjectDependencies, NpmProjectDependency } from './npmproject-dependencies';
+import { readdir$ } from './util/promisify';
 
 export type InstalledLocalDependency = FromTo<NpmProjectDependency, NpmProject> | Skipped;
 
@@ -33,7 +34,7 @@ export class LocalInstall {
         const localDeps = Object.values(packageJson.local.dependencies).map(d => new LocalDependency(d));
 
         if (!localDeps)
-            return console.log(yellow`No localDependencies found in ${npmProject.packageJson.json.name} package.json`);
+            return console.log(yellow`No local.dependencies found in ${npmProject.packageJson.json.name} package.json`);
 
         return this.installLocalDependencies(localDeps.map(d => {
             d.sourcePath = path.relative(process.cwd(), d.sourcePath);
@@ -59,14 +60,16 @@ export class LocalInstall {
             const npmProjectDependencies = new NpmProjectDependencies();
             const project = new NpmProject(this.options.projectDir);
 
-            npmProjectDependencies.addDependency(project, ...dependencies);
+            await npmProjectDependencies.addDependency(project, ...dependencies);
 
-            const installedProjects = await this._installProjectLocalDependencies(project, npmProjectDependencies.getDependencies(project));
+            const installedProjects = await this._installProjectLocalDependencies(project);
 
             await Promise.all([]);
             await project.writePackageJson();
 
             const donePromises: Promise<void>[] = [];
+
+            console.log('');
 
             for (const result of installedProjects) {
                 if (isSkipped(result)) {
@@ -77,13 +80,13 @@ export class LocalInstall {
 
                     donePromises.push(to.writePackageJson().then(() => {
                         // tslint:disable-next-line: max-line-length
-                        console.log(colors.blue.bold.$`- Package ${from.project.packageJson.json.name} installed in ${to.packageJson.json.name} package.json "localDependencies" (mode: ${from.localDependency.mode})`
+                        console.log(colors.blue.bold.$`- Package ${from.project.packageJson.json.name} installed in ${to.packageJson.json.name} package.json "local.dependencies" (mode: ${from.localDependency.mode})`
                         );
                     }));
                 }
             }
 
-            return Promise.all(donePromises).then(() => { console.log('\n'); });
+            return Promise.all(donePromises).then(() => { console.log(''); });
         } catch (err) {
             console.error(red`Something wrong happened: ${err.message || err}`, err.stack ? red`\n${err.stack}` : '');
         } finally {
@@ -110,23 +113,24 @@ export class LocalInstall {
         const installDepsPromises: Promise<InstalledLocalDependency[]>[] = [];
 
         for (const [ project, dependencies ] of npmProjectDependencies.dependencies)
-            installDepsPromises.push(this._installProjectLocalDependencies(project, dependencies));
+            installDepsPromises.push(this._installProjectLocalDependencies(project));
 
 
         return Promise.all(installDepsPromises);
     }
 
-    private async _installProjectLocalDependencies(project: NpmProject, dependencies: NpmProjectDependency[]): Promise<InstalledLocalDependency[]> {
+    private async _installProjectLocalDependencies(project: NpmProject): Promise<InstalledLocalDependency[]> {
 
         await project.loadProject();
 
-        return Promise.all(dependencies.map(async dependency => {
+        return Promise.all(Object.entries(project.dependencies).map(async arg => {
+            const [ depName, dependency ] = arg; // was not working typing in the signature
+
             const depProject = dependency.project;
 
             await depProject.loadProject();
 
             const dep = await project.localDependencyInPackageJson(depProject.packageJson.json.name);
-            const filesInInstallDir = await project.filesInInstallDir(this.options.installDir);
 
             const filesInstaller = new FilesInstaller({
                 dependency: depProject,
@@ -139,7 +143,7 @@ export class LocalInstall {
             this.filesInstallerByProject.set(depProject, filesInstaller);
             let filesToBeInstalled = await filesInstaller.readFilesToBeInstalled();
 
-            if (dep && dep.version === depProject.packageJson.json.version && filesInInstallDir.includes(depProject.packageJson.json.name)) {
+            if (await dependency.isInstalledIn(project)) {
 
                 for (const [ key, file ] of filesToBeInstalled) {
                     // install only what does not exist already
@@ -155,7 +159,7 @@ export class LocalInstall {
 
                     // reinstall all
                     filesToBeInstalled = await filesInstaller.readFilesToBeInstalled();
-                    console.log(yellow`${depProject.packageJson.json.name} will be reinstalled by force\n`);
+                    console.log(yellow`${depProject.packageJson.json.name} will be reinstalled by force`);
                 }
             }
 
@@ -166,7 +170,7 @@ export class LocalInstall {
                 filesInstaller.logInstalledFiles();
 
             // add localDependencies project in package.json
-            await project.addLocalDependency(dependency);
+            await project.addLocalDependency(depName);
 
             return { from: dependency, to: project };
         }));

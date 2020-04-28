@@ -4,6 +4,26 @@
     "description": "Npm Local Packages Install",
     "main": "lib",
     "module": "lib-esm",
+    "scripts": {
+        "git:push": "npm version patch && git push && git push --tags",
+        "npm:publish": "npm publish --access public",
+        "postinstall": "npx install-local",
+        "clean": "shx rm -r dist || true",
+        "prebuild": "npm run clean",
+        "postbuild": "npm run all-test",
+        "build": "yarn run clean && tsc",
+        "build2": "yarn run clean && tsc && tsc -m es6 --outDir lib-esm",
+        "all-test": "npm run test && npm run e2e",
+        "test": "jest --config jest-ut.config.js",
+        "e2e": "jest --config jest-e2e.config.js",
+        "renamer": "renamer -regex --find '\\.js$' --replace '.mjs' './lib-esm/**/*.js'"
+    },
+    "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
+    "license": "MIT",
+    "files": [
+        "lib",
+        "lib-esm"
+    ],
     "dependencies": {
         "@types/yargs": "^13.0.3",
         "@upradata/browser-util": "^1.0.21",
@@ -40,23 +60,9 @@
         "ts-jest": "^24.1.0",
         "ts-node": "^8.5.2"
     },
-    "scripts": {
-        "git:push": "npm version patch && git push && git push --tags",
-        "npm:publish": "npm publish --access public",
-        "postinstall": "npx install-local",
-        "clean": "shx rm -r dist || true",
-        "prebuild": "npm run clean",
-        "postbuild": "npm run all-test",
-        "build": "yarn run clean && tsc && tsc -m es6 --outDir lib-esm",
-        "all-test": "npm run test && npm run e2e",
-        "test": "jest --config jest-ut.config.js",
-        "e2e": "jest --config jest-e2e.config.js",
-        "renamer": "renamer -regex --find '\\.js$' --replace '.mjs' './lib-esm/**/*.js'"
-    },
-    "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
-    "license": "MIT",
-    "files": [
-        "lib",
-        "lib-esm"
-    ]
+    "local": {
+        "dependencies": {
+            "@upradata/node-util": "link:/home/milottit/Libraries/Util/node-util@2.0.3"
+        }
+    }
 }

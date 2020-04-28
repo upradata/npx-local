@@ -1,29 +1,29 @@
 import { projectDir } from './util';
-import { readJsonAsync } from '../src/read-json5';
 import path from 'path';
 import { LocalInstallPackageJsonType } from '../src/package-json';
 import { chain } from '@upradata/util';
 import { execNpmLocal, Dependency, checkLocalProp, checkInstallDir } from './common';
 import { projects } from './projects.config';
 import { remove } from 'fs-extra';
+import { readJson } from '@upradata/node-util';
 
 
 // execSync(`cd ${root} && tsc`);
 
 async function checkLocalDependencies(projectI: number, deps: Dependency[], installDir: string = 'node_modules') {
-    const packageJson = await readJsonAsync(path.join(projectDir(projectI), 'package.json')) as LocalInstallPackageJsonType;
+    const packageJson = await readJson.async(path.join(projectDir(projectI), 'package.json')) as LocalInstallPackageJsonType;
     checkLocalProp(chain(() => packageJson.local.dependencies), deps.map(dep => dep.projectI));
     await checkInstallDir(projectI, deps, installDir);
 }
 
 
 async function checkLocalUsedBy(projectI: number, usedBys: number[]) {
-    const packageJson = await readJsonAsync(path.join(projectDir(projectI), 'package.json')) as LocalInstallPackageJsonType;
+    const packageJson = await readJson.async(path.join(projectDir(projectI), 'package.json')) as LocalInstallPackageJsonType;
     checkLocalProp(chain(() => packageJson.local.usedBy), usedBys);
 }
 
 async function snapshot(projectI: number) {
-    const packageJson = await readJsonAsync(path.join(projectDir(projectI), 'package.json')) as LocalInstallPackageJsonType;
+    const packageJson = await readJson.async(path.join(projectDir(projectI), 'package.json')) as LocalInstallPackageJsonType;
     expect(packageJson).toMatchSnapshot();
 }
 

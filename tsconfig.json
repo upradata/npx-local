@@ -1,30 +1,20 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "outDir": "lib",
-    "lib": ["esnext"],
-    "module": "umd",
-    "sourceMap": true,
-    "declaration": true,
-    "moduleResolution": "node",
-    "traceResolution": false,
-    "baseUrl": ".",
-    "allowSyntheticDefaultImports": true,
-    "esModuleInterop": true
-    /*  "paths": {
-      "stickies/*": ["node_modules/stickies/src/*"],
-      "features-detection/*": ["node_modules/features-detection/src/*"]
-    } */
-  },
-  "include": [
-    "./src",
-    "src-js/tsc.flatten.js",
-    "src-js/yargs-addArgv.js",
-    "src-js/runShell.js",
-    "src-js/rm.js",
-    "src-js/readJson5.js",
-    "src-js/npmlocal.js"
-  ]
-  // "include": ["src", "node_modules/stickies", "node_modules/features-detection", "locals/stickies", "locals/features-detection"],
-  // "exclude": ["node_modules/[!stickies]", "node_modules/[!features-detection]", ".vscode-test"]
+    "compilerOptions": {
+        "target": "ESNext",
+        "outDir": "lib",
+        "lib": [
+            "ESNext"
+        ],
+        "module": "CommonJS",
+        "sourceMap": true,
+        "declaration": true,
+        "moduleResolution": "node",
+        "traceResolution": false,
+        "baseUrl": ".",
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true
+    },
+    "include": [
+        "./src"
+    ]
 }

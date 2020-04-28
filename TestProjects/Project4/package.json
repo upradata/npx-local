@@ -2,7 +2,13 @@
 	"name": "project4",
 	"version": "0.0.1",
 	"description": "",
-	"main": "lib/index.js",
+	"main": "lib",
+	"module": "lib-esm",
+	"files": [
+		"lib",
+		"lib-esm",
+		"README.md"
+	],
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
@@ -22,12 +28,6 @@
 				"path": "copy:/home/milottit/Libraries/LocalInstallation/TestProjects/Project1@0.0.1",
 				"install-dir": "local_modules"
 			}
-		},
-		"usedBy": {
-			"project1": "/home/milottit/Libraries/LocalInstallation/TestProjects/Project1"
 		}
-	},
-	"dependencies": {
-		"node-watch": "^0.6.3"
 	}
 }

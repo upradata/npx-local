@@ -3,10 +3,10 @@ import path from 'path';
 import { writeJSON } from 'fs-extra';
 import { OriginalAbsolute } from './types';
 import { LocalInstallPackageJson } from './package-json';
-import { readdir$ } from './util/promisify';
 import { LocalDependency } from './local-dependency';
-import { InstallMode } from './local-install.options';
 import { NpmProjectDependency } from './npmproject-dependencies';
+import { ObjectOf } from '@upradata/util';
+import { yellow } from './util/colors';
 
 
 export class NpmProject {
@@ -15,7 +15,7 @@ export class NpmProject {
     public _installDir: string;
 
 
-    constructor(projectPath: string) {
+    constructor(projectPath: string, public dependencies?: ObjectOf<NpmProjectDependency>) {
         this.projectPath = {
             original: projectPath,
             absolute: path.resolve(process.cwd(), projectPath)
@@ -28,24 +28,11 @@ export class NpmProject {
         return /^(\.|\/)/.test(this.projectPath.original);
     }
 
-    public get installDir() {
-        if (!this._installDir)
-            throw new Error(`Project in ${this.projectPath.absolute} is not an installation project`);
-
-        return this._installDir;
-    }
-
-    public set installDir(installDir: string) {
-        this._installDir = installDir;
-    }
 
     public async getPackageJson(force?: boolean) {
         return this.packageJson.readJson(force);
     }
 
-    public async filesInInstallDir(installDir?: string): Promise<string[]> {
-        return readdir$(this.absolutePath(installDir || this.installDir)).catch(e => []);
-    }
 
     public absolutePath(...filepaths: string[]) {
         return path.join(this.projectPath.absolute, ...filepaths);
@@ -60,10 +47,6 @@ export class NpmProject {
             absolute: this.absolutePath(...filepaths),
             original: this.originalPath(...filepaths)
         };
-    }
-
-    public get installDirPath(): OriginalAbsolute {
-        return this.path(this.installDir);
     }
 
     public async loadProject() {
@@ -86,9 +69,15 @@ export class NpmProject {
         return new LocalDependency(dep);
     }
 
-    public async addLocalDependency(npmProjectDependency: NpmProjectDependency) {
-        const dependency = npmProjectDependency.project;
-        const { mode, installDir } = npmProjectDependency.localDependency;
+    public async addLocalDependency(dependencyName: string) {
+        const projectDependency = this.dependencies[ dependencyName ];
+        if (!projectDependency) {
+            console.warn(yellow`${this.packageJson.json.name} has no dependency called "${dependencyName}"`);
+            return;
+        }
+
+        const dependency = projectDependency.project;
+        const { mode, installDir } = projectDependency.localDependency;
 
         const projectJson = await this.getPackageJson();
         const depJson = await dependency.getPackageJson();

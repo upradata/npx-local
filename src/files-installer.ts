@@ -97,8 +97,12 @@ export class FilesInstaller extends FilesInstallerOptions {
         const add: (...files: string[]) => void = this.add.bind(this, filesToBeInstalled);
 
         add('package.json');
+        add('node_modules');
         add(types);
         add(typings);
+
+        // if exists then stats exists
+        await this.stats('node_modules/.pnpm').then(({ stats }) => add('node_modules/.pnpm')).catch(() => { });
 
 
         if (chain(() => files.length, 0) > 0)
@@ -300,11 +304,12 @@ export class FilesInstaller extends FilesInstallerOptions {
                 `${this.dependency.packageJson.json.name} ("${source.projectPath[ this.pathType ]}") installed in ${dest.packageJson.json.name} ("${dest.projectPath[ this.pathType ]}")`, terminalWidth
             );
 
-            console.log(
+            const write = (...values: any[]) => values.forEach(v => process.stdout.write(v));
+            write(
                 fullWidthBg(colors.bgGreen.$), '\n\n',
-                colors.white.bold.$`${localInstalled}`, '\n',
+                colors.white.bold.$`${localInstalled}`, '\n\n',
                 fullWidthBg(colors.bgGreen.$),
-                '\n'
+                '\n\n'
             );
         }
 

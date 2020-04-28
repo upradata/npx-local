@@ -1,9 +1,9 @@
 import { JSONSchemaForNPMPackageJsonFiles } from '@schemastore/package';
 import { ObjectOf } from '@upradata/util';
-import { readJsonAsync } from './read-json5';
 import { pathExists } from 'fs-extra';
 import findUp from 'find-up';
 import { Dependency } from './local-dependency';
+import { readPackageJson } from '@upradata/node-util';
 
 export class Local {
     dependencies?: ObjectOf<Dependency>;
@@ -67,7 +67,7 @@ export class LocalInstallPackageJson {
 
     async readJson(force: boolean = false) {
         if (!this.json || force) {
-            const json = await readJsonAsync(await this.path.async);
+            const json = await readPackageJson.async(await this.path.async);
             this.json = json as LocalInstallPackageJson;
         }
 

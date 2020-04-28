@@ -1,10 +1,9 @@
 
 import { isInstallMode, LocalInstallOptions, LocalPackage, InstallModes } from './local-install.options';
-import { readJsonSync } from './read-json5';
 import findUp from 'find-up';
-import { ParseArgs, InvalidParameter } from './parse-args';
 import yargsParser from 'yargs-parser';
 import { Arguments } from 'yargs';
+import { readPackageJson, ParseArgs, InvalidParameter } from '@upradata/node-util';
 
 
 export interface ProgramArgv extends LocalInstallOptions<string> {
@@ -62,7 +61,7 @@ export function processArgs(): Arguments<LocalInstallOptions<LocalPackage>> {
     // yargs.strict(true);
 
     yargs.command([ 'install', '$0' ], 'npmlocal install local dependencies');
-    yargs.version(readJsonSync(findUp.sync('package.json', { cwd: __dirname })).version);
+    yargs.version(readPackageJson.sync(findUp.sync('package.json', { cwd: __dirname })).version);
 
     yargs.option('local-packages', {
         type: 'array',
