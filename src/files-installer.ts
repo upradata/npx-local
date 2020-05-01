@@ -83,7 +83,9 @@ export class FilesInstaller extends FilesInstallerOptions {
 
             return lstat$(f).then(stats => ({ file, stats })).catch(e => {
                 // to create a stack that has not been created by the lstat call
-                return Promise.reject(new Error(e.message));
+                // return Promise.reject(new Error(e.message));
+                console.warn(yellow`"${f}" does not exist`);
+                return { file: undefined, stats: undefined };
             });
         }
 
