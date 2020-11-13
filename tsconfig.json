@@ -12,7 +12,12 @@
         "traceResolution": false,
         "baseUrl": ".",
         "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "paths": {
+            "@root/*": [
+                "./*"
+            ],
+        }
     },
     "include": [
         "./src"

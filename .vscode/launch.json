@@ -9,7 +9,11 @@
             "name": "Jest e2e",
             "request": "launch",
             "program": "${workspaceFolder}/node_modules/jest/bin/jest",
-            "args": ["--runInBand", "--config", "jest-e2e.config.js"],
+            "args": [
+                "--runInBand",
+                "--config",
+                "jest-e2e.config.js"
+            ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
             "internalConsoleOptions": "openOnFirstSessionStart",
@@ -22,13 +26,18 @@
             "program": "${workspaceFolder}/src/tscflatten.js",
             "protocol": "inspector",
             "showAsyncStacks": true,
-            "args": ["-m", "es6", "--outDir", "lib-esm"]
+            "args": [
+                "-m",
+                "es6",
+                "--outDir",
+                "lib-esm"
+            ]
         },
         {
             "type": "node",
             "request": "launch",
             "name": "Launch npmlocal",
-            "program": "${workspaceFolder}/src/npmlocal.js",
+            "program": "${workspaceFolder}/lib/index.js",
             "protocol": "inspector",
             "showAsyncStacks": true,
             "args": [
@@ -40,13 +49,16 @@
                 "../FeaturesDetection",
                 "../Stickies",
                 "../Stickies"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/lib/**/*.js"
             ]
         },
         {
             "type": "node",
             "request": "launch",
             "name": "Launch npmlocal2",
-            "program": "${workspaceFolder}/src/npmlocal.js",
+            "program": "${workspaceFolder}/src/index.js",
             "protocol": "inspector",
             "showAsyncStacks": true,
             "args": [
@@ -62,8 +74,13 @@
             "request": "launch",
             "name": "npmlocal ../Project1",
             "program": "${workspaceFolder}/lib/index.js",
-            "args": ["--verbose", "../Project1"],
-            "outFiles": ["${workspaceFolder}/lib/**/*.js"],
+            "args": [
+                "--verbose",
+                "../Project1"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/lib/**/*.js"
+            ],
             "cwd": "${workspaceFolder}/TestProjects/Project4"
         },
         {
@@ -71,8 +88,12 @@
             "request": "launch",
             "name": "npmlocal",
             "program": "${workspaceFolder}/lib/index.js",
-            "args": ["-v"],
-            "outFiles": ["${workspaceFolder}/lib/**/*.js"],
+            "args": [
+                "-v"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/lib/**/*.js"
+            ],
             "cwd": "${workspaceFolder}/TestProjects/Project4"
         },
         {
@@ -89,7 +110,9 @@
                 "../Project2",
                 "../Project3"
             ],
-            "outFiles": ["${workspaceFolder}/lib/**/*.js"],
+            "outFiles": [
+                "${workspaceFolder}/lib/**/*.js"
+            ],
             "cwd": "${workspaceFolder}/TestProjects/Project4"
         },
         {
@@ -97,8 +120,14 @@
             "request": "launch",
             "name": "npmlocal -v --force  -w",
             "program": "${workspaceFolder}/lib/index.js",
-            "args": ["--force", "-v", "-w"],
-            "outFiles": ["${workspaceFolder}/lib/**/*.js"],
+            "args": [
+                "--force",
+                "-v",
+                "-w"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/lib/**/*.js"
+            ],
             "cwd": "${workspaceFolder}/TestProjects/Project4"
         }
     ]
