@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 mkdir -p bin
 
-INDEX="lib/index.js"
+INDEX="lib-esm/index.js"
 
 echo "copy $INDEX to bin"
 

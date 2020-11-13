@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "ESNext",
-        "outDir": "lib",
+        "outDir": "lib-esm",
         "lib": [
             "ESNext"
         ],

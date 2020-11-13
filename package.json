@@ -2,8 +2,12 @@
     "name": "@upradata/npmlocal",
     "version": "1.0.0",
     "description": "Npm Local Packages Install",
-    "main": "lib",
+    "main": "lib-esm",
+    "types": "lib-esm",
     "module": "lib-esm",
+    "files": [
+        "lib-esm"
+    ],
     "scripts": {
         "git:push": "npm version patch && git push && git push --tags",
         "npm:publish": "npm publish --access public",
@@ -19,10 +23,6 @@
     },
     "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
     "license": "MIT",
-    "files": [
-        "lib",
-        "lib-esm"
-    ],
     "dependencies": {
         "@types/yargs": "^15.0.9",
         "babel-core": "^6.26.3",
@@ -55,6 +55,7 @@
         "@types/node": "^14.14.7",
         "@types/normalize-path": "^3.0.0",
         "@types/rimraf": "^3.0.0",
+        "concurrently": "^5.3.0",
         "jest": "^26.6.3",
         "jest-expect-message": "^1.0.2",
         "node-watch": "^0.7.0",
