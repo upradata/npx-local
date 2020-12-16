@@ -1,46 +1,61 @@
-import { join } from 'path';
+import { join, basename } from 'path';
 import { readdir, stat } from 'fs-extra';
+import { JSONSchemaForNPMPackageJsonFiles } from '@schemastore/package';
 
+interface Project {
+    folder: string;
+    package: JSONSchemaForNPMPackageJsonFiles;
+}
 
-export const lookForLocalPackages = async (libraryFolder: string, maxDepth: number = NaN) => {
+export interface Options {
+    maxDepth?: number;
+    excludeFolder?: string[] | ((folder: string) => boolean);
+    filterPackage?: (project: Project) => boolean;
+}
 
-    const findProjects = (folders: string[]) => {
+export const lookForLocalPackages = async (libraryFolder: string, options: Options = {}): Promise<Project[]> => {
+    const { maxDepth = NaN, excludeFolder: exclude = () => false, filterPackage = () => true } = options;
+
+    const excludeFolder = typeof exclude === 'function' ? exclude : (folder: string) => exclude.some(e => e === basename(folder));
+
+    const findProjects = (folders: string[]): Promise<Project[]> => {
         return Promise.all(folders.map(async folder => {
             const files = await readdir(folder);
             const packageJson = files.find(file => file === 'package.json');
 
-            return packageJson ? { folder, name: require(join(folder, packageJson)).name } : { folder, name: undefined };
+            return packageJson ? { folder, package: require(join(folder, packageJson)) } : { folder, package: undefined };
         }));
     };
 
     let depth: number = 0;
 
-    const getProjectNames = (folders$: Promise<{ folder: string, name: string; }[]>): Promise<{ folder: string, name: string; }[]> => {
-        return folders$.then(async projects => {
-            const foundProjects = projects.filter(p => p.name);
+    const getProjects = async (projects$: Promise<Project[]>): Promise<Project[]> => {
+        const projects = await projects$;
 
-            ++depth;
-            if (depth > maxDepth)
-                return foundProjects;
+        const foundProjects = projects.filter(p => p.package).filter(filterPackage);
 
-            const restFolders = await Promise.all(projects
-                .filter(p => !p.name) // all files without a project name found (i.e. not a folder with package.json)
-                .map(async ({ folder }) => ({ folder, files: await readdir(folder) }))
-            );
+        ++depth;
+        if (depth > maxDepth)
+            return foundProjects;
 
-            const folders = await Promise.all(restFolders
-                .flatMap(({ folder, files }) => files
-                    .map(file => join(folder, file))
-                    .map(async file => ({ stats: await stat(file), file }))) // we keep only the directories in each folder
-            ).then(folders => folders.filter(({ stats }) => stats.isDirectory()).map(({ file }) => file));
+        const restFolders = await Promise.all(projects
+            .filter(p => !p.package) // all files without a package.json
+            .filter(p => !excludeFolder(p.folder))
+            .map(async ({ folder }) => ({ folder, files: await readdir(folder) }))
+        );
+
+        const folders = await Promise.all(restFolders
+            .flatMap(({ folder, files }) => files
+                .map(file => join(folder, file))
+                .map(async file => ({ stats: await stat(file), file }))) // we keep only the directories in each folder
+        ).then(files => files.filter(({ stats }) => stats.isDirectory()).map(({ file }) => file));
 
 
-            if (folders.length === 0)
-                return foundProjects;
+        if (folders.length === 0)
+            return foundProjects;
 
-            return foundProjects.concat(await getProjectNames(findProjects(folders)));
-        });
+        return foundProjects.concat(await getProjects(findProjects(folders)));
     };
 
-    return getProjectNames(Promise.resolve([ { folder: libraryFolder, name: undefined } ]));
+    return getProjects(findProjects([ libraryFolder ]));
 };

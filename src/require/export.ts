@@ -3,8 +3,6 @@ import { getFullPathNormalized } from './full-path';
 import { isString, RequireObject, RequireModuleAcceptFunction, RequireModuleAccept, ModuleExports, ensureArray } from './types';
 
 
-
-
 export class ExportContext {
     constructor(public fromModule: string, public _export: Export) { }
 
