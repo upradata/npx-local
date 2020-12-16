@@ -13,7 +13,7 @@ import { lookForLocalPackages } from './local-packages';
 
 
 // To be independent from self package
-import('./require').then(async ({ requireOverride }) => {
+import('../require-override').then(async ({ requireOverride }) => {
     const libraryFolder = '/home/milottit/Libraries';
     const localPackages = await lookForLocalPackages(libraryFolder);
 

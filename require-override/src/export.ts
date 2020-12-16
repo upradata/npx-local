@@ -1,6 +1,6 @@
 import Module from 'module';
 import { getFullPathNormalized } from './full-path';
-import { isString, RequireObject, RequireModuleAcceptFunction, RequireModuleAccept, ModuleExports, ensureArray } from './types';
+import { isString, ReRequireObject, ReRequireModuleAcceptFunction, ReRequireModuleAccept, ModuleExports, ensureArray } from './types';
 
 
 export class ExportContext {
@@ -10,13 +10,13 @@ export class ExportContext {
         return getFullPathNormalized(filePath, this.fromModule);
     }
 
-    add(requireObj: RequireObject<RequireModuleAccept>) {
+    add(requireObj: ReRequireObject<ReRequireModuleAccept>) {
         const { module } = requireObj;
 
         if (isString(module)) {
-            this._export.exports[ this.fullPath(module) ] = requireObj as RequireObject<string>;
+            this._export.exports[ this.fullPath(module) ] = requireObj as ReRequireObject<string>;
         } else {
-            this._export.accepts.push(requireObj as RequireObject<RequireModuleAcceptFunction>);
+            this._export.accepts.push(requireObj as ReRequireObject<ReRequireModuleAcceptFunction>);
         }
     }
 
@@ -29,7 +29,7 @@ export class ExportContext {
     }
 
     require(filePath: string, parent: Module): ModuleExports {
-        let fileExport: RequireObject<RequireModuleAccept> = this._export.exports[ this.fullPath(filePath) ];
+        let fileExport: ReRequireObject<ReRequireModuleAccept> = this._export.exports[ this.fullPath(filePath) ];
 
         if (!fileExport) {
             for (const accept of this._export.accepts) {
@@ -75,11 +75,11 @@ export class ExportContext {
 }
 
 
-export type Exports = { [ path: string ]: RequireObject<string>; };
+export type Exports = { [ path: string ]: ReRequireObject<string>; };
 
 export class Export {
     exports: Exports;
-    accepts: RequireObject<RequireModuleAcceptFunction>[];
+    accepts: ReRequireObject<ReRequireModuleAcceptFunction>[];
 
     constructor() {
         this.init();

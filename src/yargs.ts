@@ -27,7 +27,7 @@ export class ParseNpmLocalArgs extends ParseArgs<ProgramArgv>{
     public processLocalPackages() {
         const argv = (this.yargs.parsed as yargsParser.DetailedArguments).argv as any as Arguments<ProgramArgv>;
 
-        const localPackages = argv.localPackages = argv.localPackages || argv._ || [];
+        const localPackages = argv.localPackages = argv.localPackages || argv._.map(d => d.toString()) || [];
         const invalidLocalPackages: InvalidParameter[] = [];
 
         for (let i = 0; i < argv.localPackages.length; ++i) {

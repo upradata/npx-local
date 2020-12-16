@@ -1,4 +1,10 @@
-import { RequireExports, RequireOptions, RequireModuleAccept, RequireModuleAcceptFunction, RequireObject, isString } from './types';
+import {
+    ReRequireExports as ReRequireExports,
+    ReRequireOptions,
+    ReRequireModuleAccept as ReRequireModuleAccept,
+    ReRequireModuleAcceptFunction,
+    ReRequireObject as ReRequireObject
+} from './types';
 import Module from 'module';
 import getCallerFile from 'get-caller-file';
 import { Export } from './export';
@@ -6,7 +12,7 @@ import { Export } from './export';
 
 const originalLoader = Module._load;
 
-export class Require {
+export class RequireOverride {
     pendingExports = new Export();
     exports = new Export();
 
@@ -44,10 +50,10 @@ export class Require {
     }
 
 
-    start(path: RequireModuleAccept, exports: RequireExports): void;
-    start<M extends RequireModuleAccept>(options: RequireOptions<M>): void;
-    start(pathOrOptions: any, exports?: RequireExports): void {
-        let opts: RequireObject<RequireModuleAccept> = undefined;
+    start(path: ReRequireModuleAccept, exports: ReRequireExports): void;
+    start<M extends ReRequireModuleAccept>(options: ReRequireOptions<M>): void;
+    start(pathOrOptions: any, exports?: ReRequireExports): void {
+        let opts: ReRequireObject<ReRequireModuleAccept> = undefined;
 
         if (arguments.length === 2) {
             opts = {
@@ -80,4 +86,4 @@ export class Require {
 }
 
 
-export const requireOverride = new Require();
+export const requireOverride = new RequireOverride();
