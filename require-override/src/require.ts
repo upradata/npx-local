@@ -24,7 +24,7 @@ export class RequireOverride {
     private init() {
         this.exports.init();
         this.pendingExports.init();
-        this.exports.accepts = this.pendingExports.accepts;
+        this.exports.callbacks = this.pendingExports.callbacks;
     }
 
     private addModuleLoad() {
@@ -51,18 +51,18 @@ export class RequireOverride {
 
 
     start(path: ReRequireModuleAccept, exports: ReRequireExports): void;
-    start<M extends ReRequireModuleAccept>(options: ReRequireOptions<M>): void;
-    start(pathOrOptions: any, exports?: ReRequireExports): void {
+    start<M extends ReRequireModuleAccept>(options: ReRequireObject<M>): void;
+    start<M extends ReRequireModuleAccept>(pathOrOptions: ReRequireModuleAccept | ReRequireObject<M>, exports?: ReRequireExports): void {
         let opts: ReRequireObject<ReRequireModuleAccept> = undefined;
 
         if (arguments.length === 2) {
             opts = {
-                module: pathOrOptions,
+                module: pathOrOptions as ReRequireModuleAccept,
                 exports,
                 newModule: undefined
             };
         } else {
-            opts = { ...pathOrOptions };
+            opts = { ...(pathOrOptions as ReRequireObject<M>) };
         }
 
         this.pendingExports.fromModule(getCallerFile()).add(opts);

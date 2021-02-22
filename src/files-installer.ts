@@ -77,14 +77,16 @@ export class FilesInstaller extends FilesInstallerOptions {
         }
     }
 
-    private async stats(file: string): Promise<{ file: string, stats: Stats; }> {
+    private async stats(file: string, options: { verbose?: boolean; } = {}): Promise<{ file: string, stats: Stats; }> {
         if (isDefined(file)) {
             const f = file.startsWith('/') ? file : this.dependency.absolutePath(file);
 
             return lstat$(f).then(stats => ({ file, stats })).catch(e => {
                 // to create a stack that has not been created by the lstat call
                 // return Promise.reject(new Error(e.message));
-                console.warn(yellow`"${f}" does not exist`);
+                if (options.verbose)
+                    console.warn(yellow`"${f}" does not exist`);
+
                 return { file: undefined, stats: undefined };
             });
         }
@@ -104,13 +106,13 @@ export class FilesInstaller extends FilesInstallerOptions {
         add(typings);
 
         // if exists then stats exists
-        await this.stats('node_modules/.pnpm').then(({ stats }) => add('node_modules/.pnpm')).catch(() => { });
+        await this.stats('node_modules/.pnpm').then(({ stats }) => { if (stats) add('node_modules/.pnpm'); }).catch(() => { });
 
 
         if (chain(() => files.length, 0) > 0)
             add(...files);
 
-        const mainFiles = [ main, module ].filter(file => !!file).map(file => this.stats(file));
+        const mainFiles = [ main, module ].filter(file => !!file).map(file => this.stats(file, { verbose: true }));
 
         for await (const { file, stats } of await Promise.all(mainFiles)) {
             if (isDefined(file)) {

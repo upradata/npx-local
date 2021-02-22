@@ -14,27 +14,27 @@ export class ExportContext {
         const { module } = requireObj;
 
         if (isString(module)) {
-            this._export.exports[ this.fullPath(module) ] = requireObj as ReRequireObject<string>;
+            this._export.statics[ this.fullPath(module) ] = requireObj as ReRequireObject<string>;
         } else {
-            this._export.accepts.push(requireObj as ReRequireObject<ReRequireModuleAcceptFunction>);
+            this._export.callbacks.push(requireObj as ReRequireObject<ReRequireModuleAcceptFunction>);
         }
     }
 
     has(filePath: string) {
-        return this._export.exports.hasOwnProperty(this.fullPath(filePath));
+        return this._export.statics.hasOwnProperty(this.fullPath(filePath));
     }
 
     get(filePath: string) {
-        return this._export.exports[ this.fullPath(filePath) ];
+        return this._export.statics[ this.fullPath(filePath) ];
     }
 
     require(filePath: string, parent: Module): ModuleExports {
-        let fileExport: ReRequireObject<ReRequireModuleAccept> = this._export.exports[ this.fullPath(filePath) ];
+        let fileExport: ReRequireObject<ReRequireModuleAccept> = this._export.statics[ this.fullPath(filePath) ];
 
         if (!fileExport) {
-            for (const accept of this._export.accepts) {
-                if (accept.module(filePath, parent)) {
-                    fileExport = accept;
+            for (const exportModule of this._export.callbacks) {
+                if (exportModule.module(filePath, parent)) {
+                    fileExport = exportModule;
                     break;
                 }
             }
@@ -70,7 +70,7 @@ export class ExportContext {
     }
 
     delete(filePath: string) {
-        delete this._export.exports[ this.fullPath(filePath) ];
+        delete this._export.statics[ this.fullPath(filePath) ];
     }
 }
 
@@ -78,8 +78,8 @@ export class ExportContext {
 export type Exports = { [ path: string ]: ReRequireObject<string>; };
 
 export class Export {
-    exports: Exports;
-    accepts: ReRequireObject<ReRequireModuleAcceptFunction>[];
+    statics: Exports;
+    callbacks: ReRequireObject<ReRequireModuleAcceptFunction>[];
 
     constructor() {
         this.init();
@@ -90,7 +90,7 @@ export class Export {
     }
 
     init() {
-        this.exports = {};
-        this.accepts = [];
+        this.statics = {};
+        this.callbacks = [];
     }
 }

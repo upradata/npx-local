@@ -20,8 +20,8 @@ export type ReRequireNewModuleFunction = (request: string, parent: Module) => Re
 
 export interface ReRequireObject<M extends ReRequireModuleAccept> {
     module: M;
-    exports: ReRequireExports;
-    newModule: ReRequireNewModuleFunction | ReRequireNewModule;
+    exports?: ReRequireExports;
+    newModule?: ReRequireNewModuleFunction | ReRequireNewModule;
 }
 
 export type ReRequireOptions<M extends ReRequireModuleAccept> = ReRequireObject<M> | ReRequireExports;
