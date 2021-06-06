@@ -3,7 +3,7 @@ import { isInstallMode, LocalInstallOptions, LocalPackage, InstallModes } from '
 import findUp from 'find-up';
 import yargsParser from 'yargs-parser';
 import { Arguments } from 'yargs';
-import { readPackageJson, ParseArgs, InvalidParameter } from '@upradata/node-util';
+import { readPackageJson, /* ParseArgs */ ParseArgsFactory, /* CustomYargs */ InvalidParameter } from '@upradata/node-util';
 
 
 export interface ProgramArgv extends LocalInstallOptions<string> {
@@ -13,7 +13,8 @@ export interface ProgramArgv extends LocalInstallOptions<string> {
 }
 
 
-export class ParseNpmLocalArgs extends ParseArgs<ProgramArgv>{
+
+export class ParseNpmLocalArgs extends ParseArgsFactory<ProgramArgv>() {
     private _localPackages: LocalPackage[] = [];
 
     constructor() {
@@ -25,7 +26,8 @@ export class ParseNpmLocalArgs extends ParseArgs<ProgramArgv>{
     }
 
     public processLocalPackages() {
-        const argv = (this.yargs.parsed as yargsParser.DetailedArguments).argv as any as Arguments<ProgramArgv>;
+        this.localPackages;
+        const argv = (this.parsed as yargsParser.DetailedArguments).argv as any as Arguments<ProgramArgv>;
 
         const localPackages = argv.localPackages = argv.localPackages || argv._.map(d => d.toString()) || [];
         const invalidLocalPackages: InvalidParameter[] = [];
@@ -55,7 +57,7 @@ export class ParseNpmLocalArgs extends ParseArgs<ProgramArgv>{
 }
 
 export function processArgs(): Arguments<LocalInstallOptions<LocalPackage>> {
-    const yargs = new ParseNpmLocalArgs() as (ParseNpmLocalArgs & ParseArgs<ProgramArgv>);
+    const yargs = new ParseNpmLocalArgs(); // as (ParseNpmLocalArgs & ParseArgs<ProgramArgv>);
 
     // Does not work as expectd. To permissive
     // yargs.strict(true);
@@ -128,7 +130,7 @@ export function processArgs(): Arguments<LocalInstallOptions<LocalPackage>> {
     });
 
 
-    const argv = yargs.help().argv;
+    const argv = yargs.help().parse() as Arguments<LocalInstallOptions<string>>;
 
 
     console.log('Npm Local Install\n');

@@ -1,14 +1,16 @@
 import { JSONSchemaForNPMPackageJsonFiles } from '@schemastore/package';
 import { ObjectOf } from '@upradata/util';
+import { readPackageJson } from '@upradata/node-util';
 import { pathExists } from 'fs-extra';
 import findUp from 'find-up';
 import { Dependency } from './local-dependency';
-import { readPackageJson } from '@upradata/node-util';
+
 
 export class Local {
     dependencies?: ObjectOf<Dependency>;
     usedBy?: ObjectOf<string>;
 }
+
 
 export type LocalInstallPackageJsonType = JSONSchemaForNPMPackageJsonFiles & { local?: Local; };
 

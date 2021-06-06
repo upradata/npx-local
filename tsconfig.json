@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target": "ESNext",
-        "outDir": "lib-esm",
+        "outDir": "lib",
         "lib": [
             "ESNext"
         ],
@@ -17,6 +17,9 @@
             "@root/*": [
                 "./*"
             ],
+            "@upradata/graceful-watcher": [
+                "/home/milottit/Libraries/Upra-Data/GracefulWatcher"
+            ]
         }
     },
     "include": [

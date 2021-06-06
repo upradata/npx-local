@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import path from 'path';
 import { lookForLocalPackages } from './local-packages';
 
 /* (async function f() {
@@ -13,11 +14,13 @@ import { lookForLocalPackages } from './local-packages';
 
 
 // To be independent from self package
-import('../require-override').then(async ({ requireOverride }) => {
-    const libraryFolder = '/home/milottit/Libraries';
+const libraryFolder = '/home/milottit/Libraries/Upra-Data';
+
+
+import(path.join(libraryFolder, 'Util/require-override')).then(async ({ RequireOverride }) => {
     const localPackages = await lookForLocalPackages(libraryFolder);
 
-    requireOverride.start({
+    new RequireOverride().start({
         module: (requestPath: string) => requestPath.startsWith('@upradata'),
         newModule: (requestPath: string) => {
             const segments = requestPath.split('/');
@@ -31,12 +34,12 @@ import('../require-override').then(async ({ requireOverride }) => {
 
     const { LocalInstall } = await import('./local-install');
     const { processArgs } = await import('./yargs');
-    const { green, yellow } = await import('./util/colors');
+    const { red } = await import('./util/colors');
 
     new LocalInstall(processArgs()).install().then(() => {
         // console.log(green`\n\Local dependencies installed!`);
     }).catch(e => {
-        console.warn(yellow`${typeof e === 'string' ? e : `${e.message}\n${e.stack}`}`);
+        console.error(red`${typeof e === 'string' ? e : `"${e.message}"\n${e.stack}`}`);
     });
 
 });
