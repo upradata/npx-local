@@ -17,15 +17,19 @@ export interface LocalPackage {
 }
 
 
+export type NpmPackageProperties = 'dependencies' | 'devDependencies';
+
+
 export class LocalInstallOptions<LocalDep extends string | LocalPackage = string | LocalPackage> {
-    localPackages: LocalDep[] = [];
-    projectDir?: string = './'; // which project where we want to install the local packages
+    localPackages?: LocalDep[] = [];
+    projectDir?: string = process.cwd(); // which project where we want to install the local packages
     installDir?: string = 'node_modules'; // dir where all the local packages will be copied
     findUp?: boolean = false;
-    verbose: number = 0;
+    verbose?: number = 0;
     // force: boolean = false;
-    mode: InstallMode;
-    watch: boolean = false;
+    mode?: InstallMode = 'link';
+    watch?: boolean = false;
+    npmPropertyToCopyLocalDeps?: NpmPackageProperties = 'dependencies';
 }
 
 

@@ -41,10 +41,9 @@
             "protocol": "inspector",
             "cwd": "/home/milottit/CACA",
             "showAsyncStacks": true,
-            /* "args": [
-                "../__AZERTY__",
-                "--verbose"
-            ], */
+            "args": [
+                "local-to-npm",
+            ],
             "outFiles": [
                 "${workspaceFolder}/lib/**/*.js"
             ]

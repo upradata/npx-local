@@ -1,5 +1,5 @@
 import { AppInjector } from '@upradata/dependency-injection';
-import { red, styles, yellow } from '@upradata/node-util';
+import { green, red, styles, terminal, yellow } from '@upradata/node-util';
 import { CodifiedError, values } from '@upradata/util';
 import { FilesInstaller } from './files-installer';
 import { FilesInstallerWatcher } from './files-installer.watcher';
@@ -30,16 +30,12 @@ export class LocalInstall {
     public async install() {
         try {
             if (this.options.localPackages.length > 0)
-                await this.installLocalDepedenciesFromArgv();
+                await this.addLocalDepedencies();
             else
                 await this.installLocalDependenciesFromPackageJson();
 
         } catch (e) {
-            if (e instanceof CodifiedError) {
-                console.error(red`${e.message}`);
-            } else {
-                throw e;
-            }
+            handlerError(e);
         }
     }
 
@@ -59,7 +55,7 @@ export class LocalInstall {
         return this.installLocalDependencies(localDeps);
     }
 
-    public installLocalDepedenciesFromArgv(): Promise<void> {
+    public addLocalDepedencies(): Promise<void> {
         return this.installLocalDependencies(this.options.localPackages.map(l =>
             new LocalDependency({
                 path: typeof l === 'string' ? l : l.path,
@@ -189,4 +185,45 @@ export class LocalInstall {
         }));
     }
 
+
+    async copyLocalDepsToNpmProperty() {
+        try {
+            const { projectDir, npmPropertyToCopyLocalDeps } = this.options;
+
+            const project = new NpmProject(projectDir);
+
+            const depNames = await project.copyLocalDependencyToNpmDependencies(npmPropertyToCopyLocalDeps);
+            await project.writePackageJson();
+
+            const title = terminal.title(`Dependencies installed in "${npmPropertyToCopyLocalDeps}"`, {
+                style: styles.white.bold.bgMagenta.$,
+                bgStyle: styles.bgMagenta.$,
+                type: 'band'
+            });
+
+            console.log(`\n${title}\n`);
+            console.log('Packages installed:\n');
+
+            const indent = '    - ';
+
+            for (const dep of depNames)
+                console.log(green`${indent}"${dep}"`);
+
+            console.log();
+        } catch (e) {
+            handlerError(e);
+        }
+    }
 }
+
+
+const handlerError = (e: any) => {
+    if (e instanceof CodifiedError) {
+        console.error(red`${e.message}`);
+    } else {
+        if (e instanceof Error)
+            console.error(red`${typeof e === 'string' ? e : `"${e.message}"\n${e.stack}`}`);
+        else
+            console.error(red`${e?.message || JSON.stringify(e)}`);
+    }
+};

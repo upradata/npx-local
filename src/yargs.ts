@@ -1,4 +1,4 @@
-import { findUp, oneLine, ParseArgsFactory, readPackageJson, CommandModule, red } from '@upradata/node-util';
+import { findUp, oneLine, ParseArgsFactory, readPackageJson, CommandModule } from '@upradata/node-util';
 import { LocalInstallOptions } from './local-install.options';
 import { LocalInstall } from './local-install';
 
@@ -78,15 +78,8 @@ export function runCommand() {
                     alias: 'h',
                     describe: 'Show this help'
                 });
-
-                y.middleware(argv => {
-                    // help is done by yargs by default
-                    if (argv.h) {
-                        yargs.showHelp();
-                        process.exit(1);
-                    }
-                });
             },
+
             handler: argv => {
                 yargs.invalidParamsAndExit(argv);
                 install(argv);
@@ -95,21 +88,65 @@ export function runCommand() {
     };
 
 
+    const copyLocalToNpmDepsCommand: CommandModule<LocalInstallOptions> = {
+        command: 'local-to-npm',
+        describe: 'copy all local dependencies to npm dependencies [package.json].dependencies/devDependencies',
+        builder: y => {
+
+            y.option('prod', {
+                type: 'boolean',
+                default: true,
+                alias: 'P',
+                describe: 'add the local dependency in [package.json].dependencies'
+            });
+
+            y.option('dev', {
+                type: 'boolean',
+                alias: 'dev',
+                conflicts: [ 'prod' ],
+                describe: 'add the local dependency in [package.json].devDependencies'
+            });
+
+            y.option('verbose', {
+                type: 'count',
+                default: 0,
+                alias: 'v',
+                describe: 'Enable verbose mode'
+            });
+        },
+
+        handler: argv => {
+            yargs.invalidParamsAndExit(argv);
+
+            new LocalInstall({
+                ...argv,
+                npmPropertyToCopyLocalDeps: argv.dev ? 'devDependencies' : 'dependencies',
+            }).copyLocalDepsToNpmProperty();
+        }
+    };
+
+
     yargs.command([ '$0 <command>' ], 'npmlocal', args => {
         args.command(command('add', 'add local dependencies to package.json'));
         args.command(command('install', 'install local dependencies from package.json'));
+        args.command(copyLocalToNpmDepsCommand);
     });
 
 
     yargs.version(readPackageJson.sync(findUp.sync('package.json', { cwd: __dirname })).version);
+
+    yargs.middleware(argv => {
+        // help is done by yargs by default
+        if (argv.h) {
+            yargs.showHelp();
+            process.exit(1);
+        }
+    });
+
     yargs.help().parse();
 }
 
 
 const install = (options: LocalInstallOptions) => {
-    new LocalInstall(options).install().then(() => {
-        // console.log(green`\n\Local dependencies installed!`);
-    }).catch(e => {
-        console.error(red`${typeof e === 'string' ? e : `"${e.message}"\n${e.stack}`}`);
-    });
+    new LocalInstall(options).install();
 };

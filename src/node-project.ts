@@ -1,12 +1,13 @@
 import { writeJSON } from 'fs-extra';
 import path from 'path';
 import { yellow } from '@upradata/node-util';
-import { ObjectOf } from '@upradata/util';
+import { entries, ObjectOf } from '@upradata/util';
 import { LocalDependency } from './local-dependency';
 import { NpmProjectDependency } from './npmproject-dependencies';
 import { LocalInstallPackageJson } from './package-json';
 import { RelativeAbsolute } from './types';
 import { relativeAbsolutPath } from './util';
+import { NpmPackageProperties } from './local-install.options';
 
 
 export class NpmProject {
@@ -94,6 +95,22 @@ export class NpmProject {
 
         projectDeps[ depJson.name ] = dep.stringify();
         depUsedBy[ projectJson.name ] = this.projectPath.absolute;
+    }
+
+    public async copyLocalDependencyToNpmDependencies(where: NpmPackageProperties = 'dependencies'): Promise<string[]> {
+        await this.loadProject();
+
+        const { dependencies = {} } = this.packageJson.json.local;
+        this.packageJson.json[ where ] = this.packageJson.json[ where ] || {};
+
+        const depNames = entries(dependencies).map(([ name, dep ]) => {
+            const { version } = new LocalDependency(dep);
+
+            this.packageJson.json[ where ][ name ] = `^${version}`;
+            return name as string;
+        });
+
+        return depNames;
     }
 
     public async writePackageJson() {
