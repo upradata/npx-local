@@ -1,0 +1,75 @@
+name: Publish on NPM
+
+# Controls when the action will run.
+on:
+    # Triggers the workflow on push or pull request events but only for the master branch
+    push:
+        branches: [master]
+    # pull_request:
+    #     branches: [master]
+
+    # Allows you to run this workflow manually from the Actions tab
+    workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+    # This workflow contains a single job called "build"
+    build:
+        # The type of runner that the job will run on
+        runs-on: ubuntu-latest
+
+        # Steps represent a sequence of tasks that will be executed as part of the job
+        steps:
+            # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+
+            - name: Checkout Node
+              uses: actions/checkout@v2
+
+            # Setup Node
+
+            - name: Setup Node
+              uses: actions/setup-node@v2
+              with:
+                  node-version: 14
+                  check-latest: true
+                  registry-url: "https://registry.npmjs.org"
+
+            # Setup Pnpm and run pnpm install
+
+            - name: Cache pnpm modules
+              uses: actions/cache@v2
+              env:
+                  cache-name: cache-pnpm-modules
+              with:
+                  path: ~/.pnpm-store
+                  key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-build-${{ env.cache-name }}-${{ matrix.node-version }}-
+
+            - name: Setup Pnpm
+              uses: pnpm/action-setup@v2.0.1
+              with:
+                  version: 6.7.6
+                  run_install: true
+
+              # Runs pnpm build
+
+            - name: Pnpm Build
+              uses: creepinson/pnpm-action@master
+              with:
+                  arguments: '["build"]'
+
+            # Publish on NPM Repository
+
+            - id: publish
+              name: publish
+              uses: JS-DevTools/npm-publish@v1
+              with:
+                  token: ${{ secrets.NPM_TOKEN }}
+                  access: public
+                  check-version: true
+
+            - if: steps.publish.outputs.type != 'none'
+              run: |
+                  echo "Version changed: ${{ steps.publish.outputs.old-version }} => ${{ steps.publish.outputs.version }}"
+                  echo "Tag => ${{ steps.publish.outputs.tag }} / Access => ${{ steps.publish.outputs.access }}"
