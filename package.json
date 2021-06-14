@@ -1,6 +1,6 @@
 {
     "name": "@upradata/npmlocal",
-    "version": "3.1.0",
+    "version": "3.1.1",
     "description": "Npm Local Packages Install",
     "main": "lib-esm",
     "types": "lib-esm",
