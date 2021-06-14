@@ -12,15 +12,7 @@
         "traceResolution": false,
         "baseUrl": ".",
         "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true,
-        "paths": {
-            "@root/*": [
-                "./*"
-            ],
-            "@upradata/graceful-watcher": [
-                "/home/milottit/Libraries/Upra-Data/GracefulWatcher"
-            ]
-        }
+        "esModuleInterop": true
     },
     "include": [
         "./src",
