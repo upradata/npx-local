@@ -1,32 +1,28 @@
-
-import path from 'path';
 import { writeJSON } from 'fs-extra';
-import { OriginalAbsolute } from './types';
-import { LocalInstallPackageJson } from './package-json';
+import path from 'path';
+import { yellow } from '@upradata/node-util';
+import { ObjectOf } from '@upradata/util';
 import { LocalDependency } from './local-dependency';
 import { NpmProjectDependency } from './npmproject-dependencies';
-import { ObjectOf } from '@upradata/util';
-import { yellow } from './util/colors';
+import { LocalInstallPackageJson } from './package-json';
+import { RelativeAbsolute } from './types';
+import { relativeAbsolutPath } from './util';
 
 
 export class NpmProject {
     public packageJson: LocalInstallPackageJson;
-    public projectPath: OriginalAbsolute;
+    public projectPath: RelativeAbsolute;
     public _installDir: string;
 
 
     constructor(projectPath: string, public dependencies?: ObjectOf<NpmProjectDependency>) {
-        this.projectPath = {
-            original: projectPath,
-            absolute: path.resolve(process.cwd(), projectPath)
-        };
-
+        this.projectPath = relativeAbsolutPath(projectPath);
         this.packageJson = new LocalInstallPackageJson(this.projectPath.absolute);
     }
 
-    public isLocalPackage() {
-        return /^(\.|\/)/.test(this.projectPath.original);
-    }
+    /* public isLocalPackage() {
+        return !path.isAbsolute(this.projectPath.relative);
+    } */
 
 
     public async getPackageJson(force?: boolean) {
@@ -35,17 +31,20 @@ export class NpmProject {
 
 
     public absolutePath(...filepaths: string[]) {
+        if (filepaths.length === 1 && path.isAbsolute(filepaths[ 0 ]))
+            return filepaths[ 0 ];
+
         return path.join(this.projectPath.absolute, ...filepaths);
     }
 
-    public originalPath(...filepaths: string[]) {
-        return path.join(this.projectPath.original, ...filepaths);
+    public relativePath(...filepaths: string[]) {
+        return path.join(this.projectPath.relative, ...filepaths);
     }
 
-    public path(...filepaths: string[]): OriginalAbsolute {
+    public path(...filepaths: string[]): RelativeAbsolute {
         return {
             absolute: this.absolutePath(...filepaths),
-            original: this.originalPath(...filepaths)
+            relative: this.relativePath(...filepaths)
         };
     }
 
@@ -60,8 +59,8 @@ export class NpmProject {
         return !!projectJson.localDepencies[ localJson.name ];
     }
 
-    public async localDependencyInPackageJson(name: string): Promise<LocalDependency> {
-        const dep: string = (await this.packageJson.localProp('dependencies').async)[ name ];
+    public async localDependency(name: string): Promise<LocalDependency> {
+        const dep = (await this.packageJson.localProp('dependencies').async)[ name ];
 
         if (!dep)
             return undefined;
@@ -71,6 +70,7 @@ export class NpmProject {
 
     public async addLocalDependency(dependencyName: string) {
         const projectDependency = this.dependencies[ dependencyName ];
+
         if (!projectDependency) {
             console.warn(yellow`${this.packageJson.json.name} has no dependency called "${dependencyName}"`);
             return;
@@ -92,7 +92,7 @@ export class NpmProject {
         );
 
 
-        projectDeps[ depJson.name ] = dep.packageJsonPath();
+        projectDeps[ depJson.name ] = dep.stringify();
         depUsedBy[ projectJson.name ] = this.projectPath.absolute;
     }
 

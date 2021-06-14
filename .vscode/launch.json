@@ -30,14 +30,30 @@
                 "-m",
                 "es6",
                 "--outDir",
-                "lib-esm"
+                "lib"
+            ]
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch npmlocal on CACA",
+            "program": "${workspaceFolder}/lib/index.js",
+            "protocol": "inspector",
+            "cwd": "/home/milottit/CACA",
+            "showAsyncStacks": true,
+            /* "args": [
+                "../__AZERTY__",
+                "--verbose"
+            ], */
+            "outFiles": [
+                "${workspaceFolder}/lib/**/*.js"
             ]
         },
         {
             "type": "node",
             "request": "launch",
             "name": "Launch npmlocal",
-            "program": "${workspaceFolder}/lib-esm/index.js",
+            "program": "${workspaceFolder}/lib/index.js",
             "protocol": "inspector",
             "showAsyncStacks": true,
             "args": [
@@ -51,7 +67,7 @@
                 "../Stickies"
             ],
             "outFiles": [
-                "${workspaceFolder}/lib-esm/**/*.js"
+                "${workspaceFolder}/lib/**/*.js"
             ]
         },
         {
@@ -73,13 +89,13 @@
             "type": "node",
             "request": "launch",
             "name": "npmlocal ../Project1",
-            "program": "${workspaceFolder}/lib-esm/index.js",
+            "program": "${workspaceFolder}/lib/index.js",
             "args": [
                 "--verbose",
                 "../Project1"
             ],
             "outFiles": [
-                "${workspaceFolder}/lib-esm/**/*.js"
+                "${workspaceFolder}/lib/**/*.js"
             ],
             "cwd": "${workspaceFolder}/TestProjects/Project4"
         },
@@ -87,12 +103,12 @@
             "type": "node",
             "request": "launch",
             "name": "npmlocal",
-            "program": "${workspaceFolder}/lib-esm/index.js",
+            "program": "${workspaceFolder}/lib/index.js",
             "args": [
                 "-v"
             ],
             "outFiles": [
-                "${workspaceFolder}/lib-esm/**/*.js"
+                "${workspaceFolder}/lib/**/*.js"
             ],
             "cwd": "${workspaceFolder}/TestProjects/Project4"
         },
@@ -100,7 +116,7 @@
             "type": "node",
             "request": "launch",
             "name": "npmlocal --verbose --force ../Project1:copy ../Project2 ../Project3",
-            "program": "${workspaceFolder}/lib-esm/index.js",
+            "program": "${workspaceFolder}/lib/index.js",
             "args": [
                 "--verbose",
                 "--force",
@@ -111,7 +127,7 @@
                 "../Project3"
             ],
             "outFiles": [
-                "${workspaceFolder}/lib-esm/**/*.js"
+                "${workspaceFolder}/lib/**/*.js"
             ],
             "cwd": "${workspaceFolder}/TestProjects/Project4"
         },
@@ -119,14 +135,14 @@
             "type": "node",
             "request": "launch",
             "name": "npmlocal -v --force  -w",
-            "program": "${workspaceFolder}/lib-esm/index.js",
+            "program": "${workspaceFolder}/lib/index.js",
             "args": [
                 "--force",
                 "-v",
                 "-w"
             ],
             "outFiles": [
-                "${workspaceFolder}/lib-esm/**/*.js"
+                "${workspaceFolder}/lib/**/*.js"
             ],
             "cwd": "${workspaceFolder}/TestProjects/Project4"
         }

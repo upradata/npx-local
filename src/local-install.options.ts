@@ -1,10 +1,14 @@
-export class InstallModes {
-    copy = undefined;
-    link = undefined;
-}
+import { AppInjector } from '@upradata/dependency-injection';
+import { keys } from '@upradata/util';
+
+
+export class InstallModes { copy; link; }
 
 export type InstallMode = keyof InstallModes;
-export const isInstallMode = (mode: string): mode is InstallMode => Object.keys(new InstallModes()).includes(mode);
+export const isInstallMode = (mode: string | undefined | null): mode is InstallMode => {
+    return mode && keys(InstallModes).includes(mode as any);
+};
+
 
 
 export interface LocalPackage {
@@ -12,12 +16,18 @@ export interface LocalPackage {
     mode: InstallMode;
 }
 
-export class LocalInstallOptions<LocalDep extends string | LocalPackage> {
+
+export class LocalInstallOptions<LocalDep extends string | LocalPackage = string | LocalPackage> {
     localPackages: LocalDep[] = [];
-    projectDir?: string = './';
-    installDir?: string = 'node_modules';
+    projectDir?: string = './'; // which project where we want to install the local packages
+    installDir?: string = 'node_modules'; // dir where all the local packages will be copied
+    findUp?: boolean = false;
     verbose: number = 0;
-    force: boolean = false;
+    // force: boolean = false;
     mode: InstallMode;
     watch: boolean = false;
 }
+
+
+
+export const getOption = () => AppInjector.root.get(LocalInstallOptions);

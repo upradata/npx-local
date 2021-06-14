@@ -3,11 +3,18 @@ import { InstallMode } from './local-install.options';
 
 export interface DependencyDetail {
     path: string;
-    installDir?: string;
-    'install-dir'?: string;
+    installDir?: string; // where to install (default node_modules)
 }
 
+
 export type Dependency = DependencyDetail | string;
+
+
+export interface LocalDependencyOptions {
+    version?: string;
+    mode?: InstallMode;
+}
+
 
 
 export class LocalDependency {
@@ -17,31 +24,34 @@ export class LocalDependency {
     public installDir: string;
     public sourcePath: string;
 
-    constructor(dependency: Dependency, options: { version?: string; mode?: InstallMode; } = {}) {
+    constructor(dependency: Dependency, options?: LocalDependencyOptions) {
         this.processDependency(dependency, options);
     }
 
-    private processDependency(dependency: Dependency, options: { version?: string; mode?: InstallMode; }) {
+    private processDependency(dependency: Dependency, options: LocalDependencyOptions = {}) {
         const dep: DependencyDetail = typeof dependency === 'string' ? { path: dependency, installDir: 'node_modules' } : dependency;
 
         this.dependencyDetail = dep;
         const [ path, depVersion ] = dep.path.split('@');
 
-        let mode: InstallMode;
-        let sourcePath: string;
+        const split = () => {
+            if (path.split(':').length === 2) {
+                const [ mode, sourcePath ] = path.split(':') as [ InstallMode, string ];
+                return { mode, sourcePath };
+            }
 
-        if (path.split(':').length === 2)
-            [ mode, sourcePath ] = path.split(':') as any;
-        else
-            sourcePath = path;
+            return { mode: undefined, sourcePath: path };
+        };
+
+        const { mode, sourcePath } = split();
 
         this.version = options.version || depVersion;
         this.sourcePath = sourcePath;
-        this.mode = mode || options.mode || 'link';
-        this.installDir = dep.installDir || dep[ 'install-dir' ];
+        this.mode = options.mode || mode || 'link';
+        this.installDir = dep.installDir;
     }
 
-    public packageJsonPath(): Dependency {
+    public stringify(): Dependency {
         const path = `${this.mode}:${this.sourcePath}@${this.version}`;
 
         if (this.installDir === 'node_modules')
@@ -50,7 +60,7 @@ export class LocalDependency {
 
         return {
             path,
-            'install-dir': this.installDir
+            installDir: this.installDir
         };
     }
 

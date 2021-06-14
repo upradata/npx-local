@@ -1,7 +1,8 @@
-import { NpmProject } from './node-project';
+import fs from 'fs-extra';
+import { makeObject, ObjectOf } from '@upradata/util';
 import { LocalDependency } from './local-dependency';
-import { ObjectOf } from '@upradata/util';
-import { readdir$ } from './util/promisify';
+import { NpmProject } from './node-project';
+
 
 export class NpmProjectDependency {
 
@@ -14,9 +15,9 @@ export class NpmProjectDependency {
         const dir = splits.slice(0, -1).join('/');
         const name = splits[ splits.length - 1 ];
 
-        const installedFiles = await readdir$(this.project.absolutePath(this.localDependency.installDir, dir)).catch(e => []);
+        const installedFiles = await fs.readdir(this.project.absolutePath(this.localDependency.installDir, dir)).catch(_e => []);
 
-        const localDep = await project.localDependencyInPackageJson(packageJson.name);
+        const localDep = await project.localDependency(packageJson.name);
 
         if (!localDep)
             return false;
@@ -31,22 +32,16 @@ export class NpmProjectDependencies {
     constructor() { }
 
     public async addDependency(npmProject: NpmProject, ...dependencies: LocalDependency[]) {
-        const deps = await Promise.all(dependencies.map(async d => {
+        const deps = (await Promise.all(dependencies.map(async d => {
             const project = new NpmProject(d.sourcePath);
 
-            if (!project.isLocalPackage())
-                console.warn(`Skip not local package ${project.projectPath}`);
-            else
-                return {
-                    name: (await project.getPackageJson()).name,
-                    projectDependency: new NpmProjectDependency(project, d)
-                };
-        }));
+            return {
+                name: (await project.getPackageJson()).name,
+                projectDependency: new NpmProjectDependency(project, d)
+            };
+        }))).filter(v => !!v);
 
-        const projectDependencies: ObjectOf<NpmProjectDependency> = {} as any;
-
-        for (const dep of deps)
-            projectDependencies[ dep.name ] = dep.projectDependency;
+        const projectDependencies = makeObject(deps, dep => ({ key: dep.name, value: dep.projectDependency }));
 
         this.dependencies.set(npmProject, projectDependencies);
         npmProject.dependencies = projectDependencies;

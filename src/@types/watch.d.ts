@@ -1,6 +1,7 @@
 
-import watch from 'node-watch';
 import { FSWatcher } from 'fs';
+import watch from 'node-watch';
+
 
 // not exported in the declaration file wtach.d.ts
 

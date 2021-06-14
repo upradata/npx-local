@@ -1,6 +1,6 @@
 {
     "name": "@upradata/npmlocal",
-    "version": "1.0.0",
+    "version": "3.1.0",
     "description": "Npm Local Packages Install",
     "main": "lib-esm",
     "types": "lib-esm",
@@ -9,24 +9,25 @@
         "lib-esm"
     ],
     "scripts": {
-        "git:push": "npm version patch && git push && git push --tags",
-        "npm:publish": "npm publish --access public",
-        "clean": "shx rm -r dist || true",
-        "prebuild": "pnpm run clean",
-        "postbuild": "build-bin.sh && pnpm run all-test",
-        "build": "tsc",
-        "build2": "pnpm run clean && tsc && tsc -m es6 --outDir lib-esm",
-        "all-test": "pnpm run test && npm run e2e",
-        "test": "jest --config jest-ut.config.js",
-        "e2e": "jest --config jest-e2e.config.js",
+        "clean": "shx rm -rf lib lib-esm",
+        "build:watch": "pnpm run clean && tsc -w",
+        "pre-build": "pnpm run clean",
+        "build": "concurrently 'tsc -p tsconfig.lib.json' 'tsc -p tsconfig.lib-esm.json'",
+        "post-build": "pnpm run test && npm run e2e",
+        "watch": "concurrently 'tsc -p tsconfig.lib.json -w' 'tsc -p tsconfig.lib-esm.json -w'",
+        "test": "pnpm jest --passWithNoTests --verbose false --config jest-ut.config.js",
+        "e2e": "pnpm jest --passWithNoTests --verbose false --config jest-e2e.config.js",
+        "github-push": "pnpm run build && npm version patch && git pushall && git pushall-tags",
+        "npm-publish": "pnpm run build && npm publish --access public",
         "renamer": "renamer -regex --find '\\.js$' --replace '.mjs' './lib-esm/**/*.js'"
     },
     "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
     "license": "MIT",
     "dependencies": {
         "@types/yargs": "^17.0.0",
-        "@upradata/node-util": "^2.0.3",
-        "@upradata/util": "^1.0.24",
+        "@upradata/dependency-injection": "^1.1.2",
+        "@upradata/node-util": "^11.1.1",
+        "@upradata/util": "^11.1.2",
         "babel-core": "^6.26.3",
         "babel-loader": "^8.2.2",
         "babel-preset-env": "^1.7.0",
@@ -43,6 +44,7 @@
         "mock-require": "^3.0.3",
         "mv": "^2.1.1",
         "node-run-cmd": "^1.0.1",
+        "node-watch": "^0.7.1",
         "normalize-path": "^3.0.0",
         "rimraf": "^3.0.2",
         "rxjs": "^7.1.0",
@@ -60,9 +62,14 @@
         "concurrently": "^6.2.0",
         "jest": "^27.0.4",
         "jest-expect-message": "^1.0.2",
-        "node-watch": "^0.7.1",
         "ts-jest": "^27.0.2",
         "ts-node": "^10.0.0",
         "typescript": "^4.3.2"
+    },
+    "local": {
+        "dependencies": {
+            "@upradata/util": "link:/home/milottit/Libraries/Upra-Data/Util/util@11.1.3",
+            "@upradata/node-util": "link:/home/milottit/Libraries/Upra-Data/Util/node-util@11.1.1"
+        }
     }
 }

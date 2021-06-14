@@ -1,9 +1,18 @@
+import { join } from 'path';
+// eslint-disable-next-line import/no-extraneous-dependencies
 import { JSONSchemaForNPMPackageJsonFiles } from '@schemastore/package';
-import { ObjectOf } from '@upradata/util';
-import { readPackageJson } from '@upradata/node-util';
-import { pathExists } from 'fs-extra';
-import findUp from 'find-up';
+import {
+    fileExists,
+    findUp,
+    readPackageJson,
+    SyncAsync,
+    SyncAsyncMode,
+    SyncAsyncType
+} from '@upradata/node-util';
+import { CodifiedError, ObjectOf, ValueOf } from '@upradata/util';
 import { Dependency } from './local-dependency';
+import { getOption } from './local-install.options';
+import { Errors } from './types';
 
 
 export class Local {
@@ -14,12 +23,6 @@ export class Local {
 
 export type LocalInstallPackageJsonType = JSONSchemaForNPMPackageJsonFiles & { local?: Local; };
 
-export class SyncAsync<T = any> {
-    sync: T = undefined;
-    async: Promise<T> = undefined;
-}
-
-const syncAsync = Object.keys(new SyncAsync());
 
 export class LocalInstallPackageJson {
     public json: LocalInstallPackageJsonType;
@@ -29,101 +32,98 @@ export class LocalInstallPackageJson {
     constructor(public directory: string) { }
 
     public async load() {
-        if (await this.hasPackageJson())
-            return this.readJson();
-
-        throw new Error(`The directory "${this.directory}" does not have a package.json`);
+        return this.readJson();
     }
 
 
-    public getPath(mode: keyof SyncAsync) {
-        const findUpArgs = [ 'package.json', { cwd: this.directory } ];
+    private getPackageJsonPath<M extends SyncAsyncMode>(mode: M) {
 
-        const path = () => {
-            return mode === 'sync' ? findUp.sync.apply(null, findUpArgs) : findUp.apply(null, findUpArgs);
+        const path = <Mode extends SyncAsyncMode>(m: Mode): SyncAsyncType<Mode, string> => {
+            const pkgJsonFile = 'package.json';
+
+            if (getOption().findUp)
+                return findUp[ m ](pkgJsonFile, { type: 'file', cwd: this.directory }) as any;
+
+            const pkgJsonPath = join(this.directory, pkgJsonFile);
+
+            return (m === 'sync' ? pkgJsonPath : Promise.resolve(pkgJsonPath)) as any;
         };
 
-        return mode === 'sync' ?
-            this._path ? this._path : this._path = path() :
-            this._path ? Promise.resolve(this._path) : path().then(p => { this._path = p; return p; });
+        const set = (p: string) => { this._path = p; return p; };
 
+        const r = mode === 'sync' ?
+            this._path ? this._path : set(path('sync')) :
+            this._path ? Promise.resolve(this._path) : path('async').then(set);
+
+        return r as SyncAsyncType<M, string>;
     }
 
     public get path(): SyncAsync<string> {
-        const o = {};
+        const _this = this;
 
-        for (const mode of syncAsync) {
-            Object.defineProperty(o, mode, {
-                get: () => {
-                    return this.getPath(mode as any);
-                }
-            });
-        }
-
-        return o as any;
+        return {
+            get sync() { return _this.getPackageJsonPath('sync'); },
+            get async() { return _this.getPackageJsonPath('async'); }
+        };
     }
 
-    public async hasPackageJson() {
-        return pathExists(await this.path.async);
-    }
 
     async readJson(force: boolean = false) {
         if (!this.json || force) {
-            const json = await readPackageJson.async(await this.path.async);
-            this.json = json as LocalInstallPackageJson;
+            const path = await this.path.async;
+
+            if (await fileExists.async(path)) {
+
+                const json = await readPackageJson.async(await this.path.async);
+                this.json = json as LocalInstallPackageJson;
+
+            } else {
+
+                throw new CodifiedError<Errors>({
+                    message: `The directory "${this.directory}" does not have a "package.json"`,
+                    code: Errors.NO_PACKAGE_JSON
+                });
+            }
         }
 
         return this.json;
     }
 
-    public getLocal(mode: keyof SyncAsync): Local | Promise<Local> {
-        const local = (json: LocalInstallPackageJsonType) => {
-            json.local = json.local || {};
-            return json.local;
-        };
+    private getProp = <O, P extends keyof O>(o: O, prop: P): O[ P ] => {
+        o[ prop ] = o[ prop ] || {} as any;
+        return o[ prop ];
+    };
 
-        return mode === 'sync' ? local(this.json) : this.readJson().then(local);
+    private getLocal<M extends SyncAsyncMode>(mode: M) {
+        const get = (json: LocalInstallPackageJsonType) => this.getProp(json, 'local');
+
+        const r = mode === 'sync' ? get(this.json) : this.readJson().then(get);
+        return r as SyncAsyncType<M, Local>;
     }
 
+    private getLocalProp<M extends SyncAsyncMode>(mode: M, prop: keyof Local) {
+        const get = (local: Local) => this.getProp(local, prop);
 
-
-    public getLocalProp(prop: keyof Local, mode: keyof SyncAsync) {
-        const localProp = (local: Local, prop: keyof Local) => {
-            local[ prop ] = local[ prop ] || {} as any;
-            return local[ prop ];
-        };
-
-        return mode === 'sync' ?
-            localProp(this.getLocal(mode) as Local, prop) :
-            (this.getLocal(mode) as Promise<Local>).then(local => localProp(local, prop));
+        const r = mode === 'sync' ? get(this.getLocal('sync')) : this.getLocal('async').then(get);
+        return r as SyncAsyncType<M, ValueOf<Local>>;
     }
 
     public get local(): SyncAsync<Local> {
-        const o = {};
+        const _this = this;
 
-        for (const mode of syncAsync) {
-            Object.defineProperty(o, mode, {
-                get: () => {
-                    return this.getLocal(mode as any);
-                }
-            });
-        }
-
-        return o as any;
+        return {
+            get sync() { return _this.getLocal('sync'); },
+            get async() { return _this.getLocal('async'); }
+        };
     }
 
-    public localProp(prop: keyof Local): SyncAsync<string> {
-        const o = {};
+    public localProp(prop: keyof Local): SyncAsync<ValueOf<Local>> {
+        const _this = this;
 
-        for (const mode of syncAsync) {
-            Object.defineProperty(o, mode, {
-                get: () => {
-                    return this.getLocalProp(prop, mode as any);
-                }
-            });
-        }
-
-        return o as any;
+        return {
+            get sync() { return _this.getLocalProp('sync', prop); },
+            get async() { return _this.getLocalProp('async', prop); }
+        };
     }
 
 }

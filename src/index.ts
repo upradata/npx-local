@@ -3,6 +3,7 @@
 import path from 'path';
 import { lookForLocalPackages } from './local-packages';
 
+
 /* (async function f() {
     const libraryFolder = '/home/milottit/Libraries';
     console.log((await lookForLocalPackages(libraryFolder, {
@@ -31,15 +32,7 @@ import(path.join(libraryFolder, 'Util/require-override')).then(async ({ RequireO
         }
     });
 
+    const { runCommand: processArgs } = await import('./yargs');
 
-    const { LocalInstall } = await import('./local-install');
-    const { processArgs } = await import('./yargs');
-    const { red } = await import('./util/colors');
-
-    new LocalInstall(processArgs()).install().then(() => {
-        // console.log(green`\n\Local dependencies installed!`);
-    }).catch(e => {
-        console.error(red`${typeof e === 'string' ? e : `"${e.message}"\n${e.stack}`}`);
-    });
-
+    processArgs();
 });
