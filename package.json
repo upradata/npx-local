@@ -1,7 +1,7 @@
 {
-    "name": "@upradata/npmlocal",
+    "name": "@upradata/npx-local",
     "version": "3.1.1",
-    "description": "Npm Local Packages Install",
+    "description": "Npm/Pnpm/Yarn Local Packages Install",
     "main": "lib-esm",
     "types": "lib-esm",
     "module": "lib-esm",
@@ -17,7 +17,7 @@
         "watch": "concurrently 'tsc -p tsconfig.lib.json -w' 'tsc -p tsconfig.lib-esm.json -w'",
         "test": "pnpm jest --passWithNoTests --verbose false --config jest-ut.config.js",
         "e2e": "pnpm jest --passWithNoTests --verbose false --config jest-e2e.config.js",
-        "github-push": "pnpm run build && npm version patch && git pushall && git pushall-tags",
+        "github-push": "npm version patch && git pushall && git pushall-tags",
         "npm-publish": "pnpm run build && npm publish --access public",
         "renamer": "renamer -regex --find '\\.js$' --replace '.mjs' './lib-esm/**/*.js'"
     },
