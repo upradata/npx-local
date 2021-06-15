@@ -11,7 +11,7 @@ import {
 } from '@upradata/node-util';
 import { CodifiedError, ObjectOf, ValueOf } from '@upradata/util';
 import { Dependency } from './local-dependency';
-import { getOption } from './local-install.options';
+import { getOptions } from './local-install.options';
 import { Errors } from './types';
 
 
@@ -41,7 +41,7 @@ export class LocalInstallPackageJson {
         const path = <Mode extends SyncAsyncMode>(m: Mode): SyncAsyncType<Mode, string> => {
             const pkgJsonFile = 'package.json';
 
-            if (getOption().findUp)
+            if (getOptions().findUp)
                 return findUp[ m ](pkgJsonFile, { type: 'file', cwd: this.directory }) as any;
 
             const pkgJsonPath = join(this.directory, pkgJsonFile);

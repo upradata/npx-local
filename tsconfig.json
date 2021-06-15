@@ -12,7 +12,9 @@
         "traceResolution": false,
         "baseUrl": ".",
         "allowSyntheticDefaultImports": true,
-        "esModuleInterop": true
+        "esModuleInterop": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
     },
     "include": [
         "./src",

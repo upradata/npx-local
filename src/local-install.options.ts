@@ -26,6 +26,7 @@ export class LocalInstallOptions<LocalDep extends string | LocalPackage = string
     installDir?: string = 'node_modules'; // dir where all the local packages will be copied
     findUp?: boolean = false;
     verbose?: number = 0;
+    quiet?: boolean = false;
     // force: boolean = false;
     mode?: InstallMode = 'link';
     watch?: boolean = false;
@@ -34,4 +35,4 @@ export class LocalInstallOptions<LocalDep extends string | LocalPackage = string
 
 
 
-export const getOption = () => AppInjector.root.get(LocalInstallOptions);
+export const getOptions = (): LocalInstallOptions => AppInjector.root.get(LocalInstallOptions);

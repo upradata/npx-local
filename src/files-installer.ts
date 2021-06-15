@@ -3,12 +3,15 @@ import { copy, ensureSymlink, lstat, remove, Stats } from 'fs-extra';
 import path from 'path';
 import { fileExists, green, oneLine, styles, terminal, yellow } from '@upradata/node-util';
 import { isDefined, isUndefined } from '@upradata/util';
+import { Component, InjectProp } from '@upradata/dependency-injection';
 import { InstallMode } from './local-install.options';
 import { NpmProject } from './node-project';
 import { isSkipped, RelativeAbsolute, Skipped, SourceDest } from './types';
+import { Logger } from './logger';
 
 
 export class InstalledFiles {
+
     files = new Set<(SourceDest<RelativeAbsolute> | Skipped)>();
 
     constructor(public dest: NpmProject) { }
@@ -45,7 +48,9 @@ export class FilesInstallerOptions {
 }
 
 
+@Component()
 export class FilesInstaller extends FilesInstallerOptions {
+    @InjectProp(Logger) private logger: Logger;
     public options: FilesInstallerOptions;
     public installedFiles: InstalledFiles;
     public pathType: keyof RelativeAbsolute;
@@ -201,16 +206,16 @@ export class FilesInstaller extends FilesInstallerOptions {
                 type: 'two-strips'
             });
 
-            console.log(`\n${title}\n`);
+            this.logger.log(`\n${title}\n`);
         }
 
         const indent = o.indent ? '    - ' : '';
 
         for (const file of filesInstalled.files) {
             if (isSkipped(file))
-                console.log(yellow`${indent}Could not install package ${source.projectPath[ this.pathType ]}:\n "${file.reason}"`);
+                this.logger.log(yellow`${indent}Could not install package ${source.projectPath[ this.pathType ]}:\n "${file.reason}"`);
             else
-                console.log(green`${indent}"${file.source[ this.pathType ]}" installed in "${file.dest[ this.pathType ]}"`);
+                this.logger.log(green`${indent}"${file.source[ this.pathType ]}" installed in "${file.dest[ this.pathType ]}"`);
         }
     }
 }

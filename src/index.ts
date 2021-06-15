@@ -6,7 +6,7 @@ import { lookForLocalPackages } from './local-packages';
 
 /* (async function f() {
     const libraryFolder = '/home/milottit/Libraries';
-    console.log((await lookForLocalPackages(libraryFolder, {
+    logger.log((await lookForLocalPackages(libraryFolder, {
         excludeFolder: [ '.git', '.vscode', 'node_modules', ],
         filterPackage: project => project.package.name.startsWith('@upradata/')
     })).map(p => p.folder));

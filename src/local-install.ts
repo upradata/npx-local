@@ -1,6 +1,6 @@
-import { AppInjector } from '@upradata/dependency-injection';
 import { green, red, styles, terminal, yellow } from '@upradata/node-util';
 import { CodifiedError, values } from '@upradata/util';
+import { AppInjector, Component, InjectProp } from '@upradata/dependency-injection';
 import { FilesInstaller } from './files-installer';
 import { FilesInstallerWatcher } from './files-installer.watcher';
 import { LocalDependency } from './local-dependency';
@@ -8,11 +8,14 @@ import { LocalInstallOptions } from './local-install.options';
 import { NpmProject } from './node-project';
 import { NpmProjectDependencies, NpmProjectDependency } from './npmproject-dependencies';
 import { FromTo, isSkipped, Skipped } from './types';
+import { Logger } from './logger';
 
 
 export type InstalledLocalDependency = FromTo<NpmProjectDependency, NpmProject> | Skipped;
 
+@Component()
 export class LocalInstall {
+    @InjectProp(Logger) private logger: Logger;
     public options: LocalInstallOptions;
     private filesInstallerByProject = new Map<NpmProject, FilesInstaller>();
 
@@ -48,7 +51,7 @@ export class LocalInstall {
         const localDeps = dependencies.map(d => new LocalDependency(d));
 
         if (localDeps.length === 0) {
-            console.log(yellow`No local.dependencies found in package.json of "${npmProject.packageJson.json.name}"`);
+            this.logger.log(yellow`No local.dependencies found in package.json of "${npmProject.packageJson.json.name}"`);
             return;
         }
 
@@ -78,7 +81,7 @@ export class LocalInstall {
 
         const installedProjects = await this.doInstallProjectLocalDependencies(project);
 
-        console.log();
+        this.logger.log();
 
         await Promise.all(installedProjects.map(result => {
             if (isSkipped(result)) {
@@ -90,17 +93,17 @@ export class LocalInstall {
             const { from, to } = result;
 
             return to.writePackageJson().then(() => {
-                console.log(styles.oneLine.blue.bold.full.underline.args.$`
+                this.logger.log(styles.oneLine.blue.bold.full.underline.args.$`
                     - Package "${from.project.packageJson.json.name}" installed in "${to.packageJson.json.name}"
                       "[package.json].local.dependencies" (mode: ${from.localDependency.mode})`
                 );
             });
         }));
 
-        console.log();
+        this.logger.log();
 
         if (this.options.watch) {
-            console.log('\n');
+            this.logger.log('\n');
             return this.startWatch();
         }
     }
@@ -108,11 +111,11 @@ export class LocalInstall {
     private async startWatch(): Promise<void> {
 
         await Promise.all([ ...this.filesInstallerByProject ].map(([ npmProject, filesInstaller ]) => {
-            console.log(styles.green.bold.$`Start watching ${npmProject.packageJson.json.name}`);
+            this.logger.log(styles.green.bold.$`Start watching ${npmProject.packageJson.json.name}`);
             return new FilesInstallerWatcher(filesInstaller).startWatch();
         }));
 
-        console.log('\n');
+        this.logger.log('\n');
     }
 
     /*  private async _installLocalDependencies(npmProjectDependencies: NpmProjectDependencies): Promise<Array<InstalledLocalDependency[]>> {
@@ -163,7 +166,7 @@ export class LocalInstall {
 
                      // reinstall all
                      filesToBeInstalled = await filesInstaller.readFilesToBeInstalled();
-                     console.log(yellow`${depProject.packageJson.json.name} will be reinstalled by force`);
+                     this.logger.log(yellow`${depProject.packageJson.json.name} will be reinstalled by force`);
                  }
              } */
 
@@ -175,7 +178,7 @@ export class LocalInstall {
 
             if (this.options.verbose) {
                 filesInstaller.logInstalledFiles();
-                console.log('\n');
+                this.logger.log('\n');
             }
 
             // add localDependencies project in package.json
@@ -201,15 +204,15 @@ export class LocalInstall {
                 type: 'band'
             });
 
-            console.log(`\n${title}\n`);
-            console.log('Packages installed:\n');
+            this.logger.log(`\n${title}\n`);
+            this.logger.log('Packages installed:\n');
 
             const indent = '    - ';
 
             for (const dep of depNames)
-                console.log(green`${indent}"${dep}"`);
+                this.logger.log(green`${indent}"${dep}"`);
 
-            console.log();
+            this.logger.log();
         } catch (e) {
             handlerError(e);
         }

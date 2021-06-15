@@ -2,12 +2,16 @@ import path from 'path';
 import fs from 'fs-extra';
 import watch, { ImprovedFSWatcher } from 'node-watch';
 import { styles, green, blue } from '@upradata/node-util';
+import { Component, InjectProp } from '@upradata/dependency-injection';
 import { RelativeAbsolute } from './types';
 import { FilesInstaller, FilesToBeInstalled } from './files-installer';
+import { Logger } from './logger';
 
 
 
+@Component()
 export class FilesInstallerWatcher {
+    @InjectProp(Logger) private logger: Logger;
     private watcher: ImprovedFSWatcher;
     private filesToWatch: FilesToBeInstalled;
 
@@ -29,14 +33,14 @@ export class FilesInstallerWatcher {
                 const relativeFile = path.relative(dependency.projectPath.absolute, name);
                 const filename = dependency.path(relativeFile)[ pathType ];
 
-                console.log(green`${event}: file "${filename}"`);
+                this.logger.log(green`${event}: file "${filename}"`);
 
                 // check if package.json has new local dependencies
                 if (path.basename(fileOrDir.relative) === 'package.json') {
                     const { newFilesToBeInstalled, removedFiles } = await this.checkNewOrRemovedFilesToBeInstalled();
 
                     if (newFilesToBeInstalled) {
-                        console.log(styles.green.bold.$`\nNews files detected in project: ${dependency.packageJson.json.name}\n`);
+                        this.logger.log(styles.green.bold.$`\nNews files detected in project: ${dependency.packageJson.json.name}\n`);
 
                         const copiedFiles = await this.filesInstaller.copyFiles(newFilesToBeInstalled);
                         this.filesInstaller.logInstalledFiles({ title: false, indent: false }, copiedFiles);
@@ -55,7 +59,7 @@ export class FilesInstallerWatcher {
                 }
                 else if (event === 'update') {
                     this.filesInstaller.copyOrLink(name, destination.absolute).then(() => {
-                        console.log(blue`"${filename}" ${mode === 'copy' ? 'copied' : 'linked'} in ${destination[ pathType ]}`);
+                        this.logger.log(blue`"${filename}" ${mode === 'copy' ? 'copied' : 'linked'} in ${destination[ pathType ]}`);
                     });
                 }
             });
@@ -73,7 +77,7 @@ export class FilesInstallerWatcher {
         installedFiles.removeFiles(...removedFiles);
 
         for (const file of removedFiles)
-            console.log(blue`"${file[ pathType ]}" has been deleted from ${destination[ pathType ]}`);
+            this.logger.log(blue`"${file[ pathType ]}" has been deleted from ${destination[ pathType ]}`);
     }
 
 
