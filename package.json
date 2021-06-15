@@ -1,12 +1,12 @@
 {
     "name": "@upradata/npx-local",
-    "version": "3.3.3",
+    "version": "3.3.4",
     "description": "Npm/Pnpm/Yarn Local Packages Install",
-    "main": "lib-esm",
-    "types": "lib-esm",
-    "module": "lib-esm",
+    "main": "lib",
+    "types": "lib",
+    "module": "lib",
     "files": [
-        "lib-esm"
+        "lib"
     ],
     "bin": "bin/npx-local",
     "scripts": {
