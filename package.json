@@ -6,11 +6,12 @@
     "types": "lib",
     "module": "lib",
     "files": [
-        "lib"
+        "lib",
+        "make-bin"
     ],
     "bin": "bin/npx-local",
     "scripts": {
-        "postinstall": "build-bin.sh",
+        "postinstall": "make-bin",
         "clean": "shx rm -rf lib lib-esm",
         "pre-build": "pnpm run clean",
         "build": "concurrently 'tsc -p tsconfig.lib.json' 'tsc -p tsconfig.lib-esm.json'",
