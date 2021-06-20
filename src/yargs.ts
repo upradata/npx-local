@@ -130,10 +130,10 @@ export function runCommand() {
     });
 
 
-    yargs.command([ '$0 <command>' ], 'npmlocal', y => {
-        y.command(installCommand('add', 'add local dependencies to package.json'));
-        y.command(installCommand('install', 'install local dependencies from package.json'));
-        y.command(copyLocalToNpmDepsCommand);
+    (yargs as any).command([ '$0 <command>' ], 'npmlocal', y => {
+        (y as any).command(installCommand('add', 'add local dependencies to package.json'));
+        (y as any).command(installCommand('install', 'install local dependencies from package.json'));
+        (y as any).command(copyLocalToNpmDepsCommand);
     });
 
 

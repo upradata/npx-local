@@ -18,7 +18,7 @@ import { lookForLocalPackages } from './local-packages';
 const libraryFolder = '/home/milottit/Libraries/Upra-Data';
 
 
-import(path.join(libraryFolder, 'Util/require-override')).then(async ({ RequireOverride }) => {
+import(path.join(libraryFolder, 'require-override')).then(async ({ RequireOverride }) => {
     const localPackages = await lookForLocalPackages(libraryFolder);
 
     new RequireOverride().start({
