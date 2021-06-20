@@ -1,38 +1,46 @@
 #!/usr/bin/env node
 
 import path from 'path';
-import { lookForLocalPackages } from './local-packages';
+
+if (process.env.NODE_ENV === 'production') {
+
+    import('./yargs').then(({ runCommand }) => runCommand());
+
+} else {
+    // /home/milottit/Libraries
+
+    // To be independent from self package
+    const libraryFolder = path.join(process.env.LIBRARIES, 'Upra-Data');
 
 
-/* (async function f() {
-    const libraryFolder = '/home/milottit/Libraries';
-    logger.log((await lookForLocalPackages(libraryFolder, {
-        excludeFolder: [ '.git', '.vscode', 'node_modules', ],
-        filterPackage: project => project.package.name.startsWith('@upradata/')
-    })).map(p => p.folder));
-    process.exit(1);
-})(); */
+    import(path.join(libraryFolder, 'require-override')).then(async ({ RequireOverride }) => {
+        const { lookForLocalPackages } = await import('./local-packages');
 
+        const localPackages = await lookForLocalPackages(libraryFolder);
 
-// To be independent from self package
-const libraryFolder = '/home/milottit/Libraries/Upra-Data';
+        new RequireOverride().start({
+            module: (requestPath: string) => requestPath.startsWith('@upradata'),
+            newModule: (requestPath: string) => {
+                const segments = requestPath.split('/');
+                const packageName = segments.slice(0, 2).join('/'); // @upradata/name
 
+                const foundPackage = localPackages.find(p => p.package.name === packageName);
+                return foundPackage ? foundPackage.folder : undefined;
+            }
+        });
 
-import(path.join(libraryFolder, 'require-override')).then(async ({ RequireOverride }) => {
-    const localPackages = await lookForLocalPackages(libraryFolder);
+        const { runCommand } = await import('./yargs');
 
-    new RequireOverride().start({
-        module: (requestPath: string) => requestPath.startsWith('@upradata'),
-        newModule: (requestPath: string) => {
-            const segments = requestPath.split('/');
-            const packageName = segments.slice(0, 2).join('/'); // @upradata/name
-
-            const foundPackage = localPackages.find(p => p.package.name === packageName);
-            return foundPackage ? foundPackage.folder : undefined;
-        }
+        runCommand();
     });
 
-    const { runCommand: processArgs } = await import('./yargs');
 
-    processArgs();
-});
+    /* (async function f() {
+        const libraryFolder = '/home/milottit/Libraries';
+        logger.log((await lookForLocalPackages(libraryFolder, {
+            excludeFolder: [ '.git', '.vscode', 'node_modules', ],
+            filterPackage: project => project.package.name.startsWith('@upradata/')
+        })).map(p => p.folder));
+        process.exit(1);
+    })(); */
+}

@@ -51,8 +51,7 @@
         "yargs": "^17.0.1",
         "@upradata/util": "^11.2.3",
         "@upradata/node-util": "^13.0.0",
-        "@upradata/dependency-injection": "^2.0.2",
-        "@upradata/require-override": "^1.0.2"
+        "@upradata/dependency-injection": "^2.0.2"
     },
     "devDependencies": {
         "@schemastore/package": "0.0.6",
@@ -75,8 +74,7 @@
         "dependencies": {
             "@upradata/util": "link:/home/milottit/Libraries/Upra-Data/util@11.2.3",
             "@upradata/node-util": "link:/home/milottit/Libraries/Upra-Data/node-util@13.0.0",
-            "@upradata/dependency-injection": "link:/home/milottit/Libraries/Upra-Data/dependency-injection@2.0.2",
-            "@upradata/require-override": "link:/home/milottit/Libraries/Upra-Data/require-override@1.0.2"
+            "@upradata/dependency-injection": "link:/home/milottit/Libraries/Upra-Data/dependency-injection@2.0.2"
         }
     }
 }
