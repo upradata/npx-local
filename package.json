@@ -5,7 +5,6 @@
     "main": "lib",
     "types": "lib",
     "module": "lib",
-    "type": "module",
     "files": [
         "lib",
         "make-bin"
