@@ -6,6 +6,7 @@
             "ESNext"
         ],
         "module": "CommonJS",
+        "resolveJsonModule": true,
         "sourceMap": true,
         "declaration": true,
         "moduleResolution": "node",

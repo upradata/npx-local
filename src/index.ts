@@ -1,19 +1,22 @@
 #!/usr/bin/env node
 
 import path from 'path';
+import type { SettingsPrivate } from './settings.private';
+
 
 if (process.env.NODE_ENV === 'production') {
 
     import('./yargs').then(({ runCommand }) => runCommand());
 
 } else {
-    // /home/milottit/Libraries
 
-    // To be independent from self package
-    const libraryFolder = path.join(process.env.LIBRARIES, 'Upra-Data');
+    const main = async () => {
 
+        // To be independent from self package
+        const settings: SettingsPrivate = await import('../settings.private.json');
+        const { libraryFolder } = settings.upradata;
 
-    import(path.join(libraryFolder, 'require-override')).then(async ({ RequireOverride }) => {
+        const { RequireOverride } = await import(path.join(libraryFolder, 'require-override'));
         const { lookForLocalPackages } = await import('./local-packages');
 
         const localPackages = await lookForLocalPackages(libraryFolder);
@@ -32,8 +35,9 @@ if (process.env.NODE_ENV === 'production') {
         const { runCommand } = await import('./yargs');
 
         runCommand();
-    });
+    };
 
+    main();
 
     /* (async function f() {
         const libraryFolder = '/home/milottit/Libraries';
