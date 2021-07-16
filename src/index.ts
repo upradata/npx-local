@@ -15,7 +15,7 @@ if (process.env.NODE_ENV === 'production') {
         // To be independent from self package
         const settings: SettingsPrivate = await import('../settings.private.json');
         const { libraryFolder } = settings.upradata;
-
+        console.log(libraryFolder);
         const { RequireOverride } = await import(path.join(libraryFolder, 'require-override'));
         const { lookForLocalPackages } = await import('./local-packages');
 
