@@ -1,6 +1,6 @@
 {
     "name": "@upradata/npx-local",
-    "version": "3.4.2",
+    "version": "3.4.3",
     "description": "Npm/Pnpm/Yarn Local Packages Install",
     "main": "lib",
     "types": "lib",
@@ -28,7 +28,9 @@
     "license": "MIT",
     "dependencies": {
         "fs-extra": "^10.0.0",
-        "node-watch": "^0.7.1"
+        "node-watch": "^0.7.1",
+        "@upradata/util": "^11.2.3",
+        "@upradata/node-util": "^13.0.0"
     },
     "devDependencies": {
         "@types/yargs": "^17.0.0",
