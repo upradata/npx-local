@@ -4,11 +4,7 @@ import path from 'path';
 import type { SettingsPrivate } from './settings.private';
 
 
-if (process.env.NODE_ENV === 'production') {
-
-    import('./yargs').then(({ runCommand }) => runCommand());
-
-} else {
+if (process.env.UPRA_DATA === 'development') {
 
     const main = async () => {
 
@@ -47,4 +43,9 @@ if (process.env.NODE_ENV === 'production') {
         })).map(p => p.folder));
         process.exit(1);
     })(); */
+
+} else {
+
+    import('./yargs').then(({ runCommand }) => runCommand());
+
 }
