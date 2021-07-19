@@ -9,12 +9,6 @@ interface Project {
 }
 
 
-export interface Options {
-    maxDepth?: number;
-    excludeFolder?: string[] | ((folder: string) => boolean);
-    filterPackage?: (project: Project) => boolean;
-}
-
 
 export const lookForLocalPackages = async (libraryFolder: string, options?: ForEachFilesOptions): Promise<Project[]> => {
 

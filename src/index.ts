@@ -10,12 +10,15 @@ if (process.env.UPRA_DATA === 'development') {
 
         // To be independent from self package
         const settings: SettingsPrivate = await import('../settings.private.json');
-        const { libraryFolder } = settings.upradata;
-        console.log(libraryFolder);
+
+        const libraryFolder = settings.upradata.libraryFolder.replace(/^~/, process.env.HOME);
+
         const { RequireOverride } = await import(path.join(libraryFolder, 'require-override'));
         const { lookForLocalPackages } = await import('./local-packages');
 
-        const localPackages = await lookForLocalPackages(libraryFolder);
+        const localPackages = await lookForLocalPackages(libraryFolder, {
+            filterFolders: folder => ![ '.git', '.vscode', 'node_modules' ].some(f => f === folder)
+        });
 
         new RequireOverride().start({
             module: (requestPath: string) => requestPath.startsWith('@upradata'),
