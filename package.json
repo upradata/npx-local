@@ -27,7 +27,10 @@
 	"license": "MIT",
 	"dependencies": {
 		"fs-extra": "^10.0.0",
-		"node-watch": "^0.7.1"
+		"node-watch": "^0.7.1",
+		"@upradata/util": "^11.2.3",
+		"@upradata/node-util": "^13.0.0",
+		"@upradata/dependency-injection": "^2.0.2"
 	},
 	"devDependencies": {
 		"@schemastore/package": "0.0.6",
