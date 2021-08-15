@@ -11,7 +11,6 @@
 	],
 	"bin": "bin/npx-local",
 	"scripts": {
-		"postinstall": "make-bin",
 		"clean": "shx rm -rf lib lib-esm",
 		"pre-build": "pnpm run clean",
 		"build": "concurrently 'tsc -p tsconfig.lib.json' 'tsc -p tsconfig.lib-esm.json'",
@@ -20,7 +19,7 @@
 		"build:watch": "concurrently 'tsc -p tsconfig.lib.json -w' 'tsc -p tsconfig.lib-esm.json -w'",
 		"test": "pnpm jest --passWithNoTests --verbose false --config jest-ut.config.js",
 		"e2e": "pnpm jest --passWithNoTests --verbose false --config jest-e2e.config.js",
-		"github-push": "npm version patch && git pushall && git pushall-tags",
+		"github-push": "pnpm run build && npm version patch && git pushall && git pushall-tags",
 		"npm-publish": "pnpm run build && npm publish --access public",
 		"renamer": "renamer -regex --find '\\.js$' --replace '.mjs' './lib-esm/**/*.js'"
 	},
@@ -28,24 +27,21 @@
 	"license": "MIT",
 	"dependencies": {
 		"fs-extra": "^10.0.0",
-		"node-watch": "^0.7.1",
-		"@upradata/util": "^11.2.3",
-		"@upradata/node-util": "^13.0.0",
-		"@upradata/dependency-injection": "^2.0.2"
+		"node-watch": "^0.7.1"
 	},
 	"devDependencies": {
-		"@types/yargs": "^17.0.0",
 		"@schemastore/package": "0.0.6",
-		"@types/fs-extra": "^9.0.11",
-		"@types/jest": "^26.0.23",
-		"@types/node": "^15.9.0",
-		"concurrently": "^6.2.0",
-		"jest": "^27.0.4",
+		"@types/fs-extra": "^9.0.12",
+		"@types/jest": "^27.0.1",
+		"@types/node": "^16.6.1",
+		"@types/yargs": "^17.0.2",
+		"concurrently": "^6.2.1",
+		"jest": "^27.0.6",
 		"jest-expect-message": "^1.0.2",
 		"shx": "^0.3.3",
-		"ts-jest": "^27.0.2",
-		"ts-node": "^10.0.0",
-		"typescript": "^4.3.2"
+		"ts-jest": "^27.0.4",
+		"ts-node": "^10.2.0",
+		"typescript": "^4.3.5"
 	},
 	"local": {
 		"dependencies": {
