@@ -25,10 +25,10 @@ export class LocalDependency {
     public sourcePath: string;
 
     constructor(dependency: Dependency, options?: LocalDependencyOptions) {
-        this.processDependency(dependency, options);
+        this.parseDependency(dependency, options);
     }
 
-    private processDependency(dependency: Dependency, options: LocalDependencyOptions = {}) {
+    private parseDependency(dependency: Dependency, options: LocalDependencyOptions = {}) {
         const dep: DependencyDetail = typeof dependency === 'string' ? { path: dependency, installDir: 'node_modules' } : dependency;
 
         this.dependencyDetail = dep;
@@ -51,7 +51,7 @@ export class LocalDependency {
         this.installDir = dep.installDir;
     }
 
-    public stringify(): Dependency {
+    public unparse(): Dependency {
         const path = `${this.mode}:${this.sourcePath}@${this.version}`;
 
         if (this.installDir === 'node_modules')

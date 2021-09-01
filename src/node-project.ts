@@ -93,7 +93,7 @@ export class NpmProject {
         );
 
 
-        projectDeps[ depJson.name ] = dep.stringify();
+        projectDeps[ depJson.name ] = dep.unparse();
         depUsedBy[ projectJson.name ] = this.projectPath.absolute;
     }
 
