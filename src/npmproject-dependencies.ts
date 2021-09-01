@@ -1,4 +1,3 @@
-import fs from 'fs-extra';
 import { makeObject, ObjectOf } from '@upradata/util';
 import { LocalDependency } from './local-dependency';
 import { NpmProject } from './node-project';
@@ -8,7 +7,9 @@ export class NpmProjectDependency {
 
     constructor(public project: NpmProject, public localDependency: LocalDependency) { }
 
-    async isInstalledIn(project: NpmProject) {
+    /* async isInstalledIn(project: NpmProject) {
+        WRONG ANYWAY !!!!
+
         const packageJson = await this.project.getPackageJson();
 
         const splits = packageJson.name.split('/');
@@ -23,8 +24,9 @@ export class NpmProjectDependency {
             return false;
 
         return localDep.version === packageJson.version && installedFiles.includes(name);
-    }
+    } */
 }
+
 
 export class NpmProjectDependencies {
     public dependencies = new Map<NpmProject, ObjectOf<NpmProjectDependency>>();

@@ -137,7 +137,7 @@ export function runCommand() {
     });
 
 
-    yargs.version(readPackageJson.sync(findUp.sync('package.json', { cwd: __dirname })).version);
+    yargs.version(readPackageJson.sync(findUp.sync('package.json', { from: __dirname })).version);
 
     yargs.middleware(argv => {
         // help is done by yargs by default

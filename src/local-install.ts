@@ -75,15 +75,13 @@ export class LocalInstall {
         const npmProjectDependencies = new NpmProjectDependencies();
         const project = new NpmProject(this.options.projectDir);
 
-        await project.writePackageJson();
-
         await npmProjectDependencies.addDependency(project, ...dependencies);
 
         const installedProjects = await this.doInstallProjectLocalDependencies(project);
 
         this.logger.log();
 
-        await Promise.all(installedProjects.map(result => {
+        await Promise.all(installedProjects.map(async result => {
             if (isSkipped(result)) {
                 const { reason } = result;
                 console.warn(yellow`- Skipped: "${reason}"`);
@@ -92,12 +90,13 @@ export class LocalInstall {
 
             const { from, to } = result;
 
-            return to.writePackageJson().then(() => {
-                this.logger.log(styles.oneLine.blue.bold.full.underline.args.$`
+            await from.project.writePackageJson();
+            await to.writePackageJson();
+
+            this.logger.log(styles.oneLine.blue.bold.full.underline.args.$`
                     - Package "${from.project.packageJson.json.name}" installed in "${to.packageJson.json.name}"
                       "[package.json].local.dependencies" (mode: ${from.localDependency.mode})`
-                );
-            });
+            );
         }));
 
         this.logger.log();
@@ -138,8 +137,8 @@ export class LocalInstall {
             await depProject.loadProject();
 
             const filesInstaller = new FilesInstaller({
-                dependency: new NpmProject(dependency.project.absolutePath()),
                 project,
+                dependency: new NpmProject(dependency.project.absolutePath()),
                 mode: dependency.localDependency.mode,
                 verbose: this.options.verbose,
                 installDir: dependency.localDependency.installDir
