@@ -1,14 +1,6 @@
 import { join } from 'path';
-// eslint-disable-next-line import/no-extraneous-dependencies
 import { JSONSchemaForNPMPackageJsonFiles } from '@schemastore/package';
-import {
-    fileExists,
-    findUp,
-    readPackageJson,
-    SyncAsync,
-    SyncAsyncMode,
-    SyncAsyncType
-} from '@upradata/node-util';
+import { fileExists, findUp, readPackageJson, SyncAsync, SyncAsyncMode, SyncAsyncType } from '@upradata/node-util';
 import { CodifiedError, ObjectOf, ValueOf } from '@upradata/util';
 import { Dependency } from './local-dependency';
 import { getOptions } from './local-install.options';
@@ -42,7 +34,7 @@ export class LocalInstallPackageJson {
             const pkgJsonFile = 'package.json';
 
             if (getOptions().findUp)
-                return findUp[ m ](pkgJsonFile, { type: 'file', cwd: this.directory }) as any;
+                return (m === 'sync' ? findUp.sync : findUp)(pkgJsonFile, { type: 'file', from: this.directory }) as any;
 
             const pkgJsonPath = join(this.directory, pkgJsonFile);
 
