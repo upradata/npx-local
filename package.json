@@ -49,7 +49,11 @@
 	"local": {
 		"dependencies": {
 			"@upradata/util": "link:/home/milottit/Libraries/Upra-Data/util@13.0.1",
+<<<<<<< HEAD
 			"@upradata/node-util": "link:/home/milottit/Libraries/Upra-Data/node-util@14.0.2",
+=======
+			"@upradata/node-util": "link:/home/milottit/Libraries/Upra-Data/node-util@14.0.1",
+>>>>>>> abcef2dac834d2835ba9eb1c4bfa47bd09476546
 			"@upradata/dependency-injection": "link:/home/milottit/Libraries/Upra-Data/dependency-injection@2.0.3"
 		}
 	}
