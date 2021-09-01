@@ -5,7 +5,8 @@ INDEX="lib/src/index.js"
 
 echo "copy $INDEX to bin"
 
-ln -sf $(realpath $INDEX) bin/npx-local
-chmod +x $INDEX
+# ln -sf $(realpath $INDEX) bin/npx-local
+(cd bin && ln -sf ../$INDEX npx-local)
 
+chmod +x $INDEX
 chmod +x -R bin

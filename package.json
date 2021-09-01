@@ -13,7 +13,7 @@
     "scripts": {
         "clean": "shx rm -rf lib lib-esm",
         "pre-build": "npm run clean",
-        "build": "tsc -p tsconfig.json",
+        "build": "tsc -p tsconfig.json && ./make-bin",
         "post-build": "npm run test && npm run e2e",
         "watch": "npm run build:watch",
         "build:watch": "tsc -p tsconfig.json -w",
@@ -45,9 +45,9 @@
     },
     "local": {
         "dependencies": {
-            "@upradata/util": "link:/home/milottit/Libraries/Upra-Data/util@11.2.3",
-            "@upradata/node-util": "link:/home/milottit/Libraries/Upra-Data/node-util@13.0.0",
-            "@upradata/dependency-injection": "link:/home/milottit/Libraries/Upra-Data/dependency-injection@2.0.2"
+            "@upradata/util": "link:/home/milottit/Libraries/Upra-Data/util@13.0.1",
+            "@upradata/node-util": "link:/home/milottit/Libraries/Upra-Data/node-util@14.0.1",
+            "@upradata/dependency-injection": "link:/home/milottit/Libraries/Upra-Data/dependency-injection@2.0.3"
         }
     }
 }
