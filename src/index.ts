@@ -31,9 +31,9 @@ if (process.env.UPRA_DATA === 'development') {
             }
         });
 
-        const { runCommand } = await import('./yargs');
+        const { runCli } = await import('./cli');
 
-        runCommand();
+        runCli();
     };
 
     main();
@@ -49,6 +49,6 @@ if (process.env.UPRA_DATA === 'development') {
 
 } else {
 
-    import('./yargs').then(({ runCommand }) => runCommand());
+    import('./cli').then(({ runCli }) => runCli());
 
 }

@@ -1,4 +1,4 @@
-import { green, red, styles, terminal, yellow } from '@upradata/node-util';
+import { green, red, styles as s, terminal, yellow } from '@upradata/node-util';
 import { CodifiedError, values } from '@upradata/util';
 import { AppInjector, Component, InjectProp } from '@upradata/dependency-injection';
 import { FilesInstaller } from './files-installer';
@@ -51,7 +51,7 @@ export class LocalInstall {
         const localDeps = dependencies.map(d => new LocalDependency(d));
 
         if (localDeps.length === 0) {
-            this.logger.log(yellow`No local.dependencies found in package.json of "${npmProject.packageJson.json.name}"`);
+            this.logger.log(s.yellow.full.bold.args.$`No ${'local.dependencies'} found in package.json of "${npmProject.packageJson.json.name}"`);
             return;
         }
 
@@ -93,7 +93,7 @@ export class LocalInstall {
             await from.project.writePackageJson();
             await to.writePackageJson();
 
-            this.logger.log(styles.oneLine.blue.bold.full.underline.args.$`
+            this.logger.log(s.oneLine.blue.bold.full.underline.args.$`
                     - Package "${from.project.packageJson.json.name}" installed in "${to.packageJson.json.name}"
                       "[package.json].local.dependencies" (mode: ${from.localDependency.mode})`
             );
@@ -110,7 +110,7 @@ export class LocalInstall {
     private async startWatch(): Promise<void> {
 
         await Promise.all([ ...this.filesInstallerByProject ].map(([ npmProject, filesInstaller ]) => {
-            this.logger.log(styles.green.bold.$`Start watching ${npmProject.packageJson.json.name}`);
+            this.logger.log(s.green.bold.$`Start watching ${npmProject.packageJson.json.name}`);
             return new FilesInstallerWatcher(filesInstaller).startWatch();
         }));
 
@@ -198,8 +198,8 @@ export class LocalInstall {
             await project.writePackageJson();
 
             const title = terminal.title(`Dependencies installed in "${npmPropertyToCopyLocalDeps}"`, {
-                style: styles.white.bold.bgMagenta.$,
-                bgStyle: styles.bgMagenta.$,
+                style: s.white.bold.bgMagenta.$,
+                bgStyle: s.bgMagenta.$,
                 type: 'band'
             });
 
