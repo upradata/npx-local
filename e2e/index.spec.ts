@@ -1,11 +1,11 @@
-import { projectDir } from './util';
 import path from 'path';
-import { LocalInstallPackageJsonType } from '../src/package-json';
+import { remove } from 'fs-extra';
 import { chain } from '@upradata/util';
+import { readJson } from '@upradata/node-util';
+import { projectDir } from './util';
+import { LocalInstallPackageJsonType } from '../src/package-json';
 import { execNpmLocal, Dependency, checkLocalProp, checkInstallDir } from './common';
 import { projects } from './projects.config';
-import { remove } from 'fs-extra';
-import { readJson } from '@upradata/node-util';
 
 
 // execSync(`cd ${root} && tsc`);

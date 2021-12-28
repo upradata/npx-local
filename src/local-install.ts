@@ -198,8 +198,8 @@ export class LocalInstall {
             await project.writePackageJson();
 
             const title = terminal.title(`Dependencies installed in "${npmPropertyToCopyLocalDeps}"`, {
-                style: s.white.bold.bgMagenta.$,
-                bgStyle: s.bgMagenta.$,
+                style: s.white.bold.bgMagenta.transform,
+                bgStyle: s.bgMagenta.transform,
                 type: 'band'
             });
 

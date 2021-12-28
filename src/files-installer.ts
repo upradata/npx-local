@@ -201,8 +201,8 @@ export class FilesInstaller extends FilesInstallerOptions {
                 `;
 
             const title = terminal.title(localInstalled, {
-                style: styles.white.bold.$,
-                bgStyle: styles.bgMagenta.$,
+                style: styles.white.bold.transform,
+                bgStyle: styles.bgMagenta.transform,
                 type: 'two-strips'
             });
 
