@@ -1,6 +1,6 @@
 {
     "name": "@upradata/npx-local",
-    "version": "3.5.2",
+    "version": "3.5.3",
     "description": "Npm/Pnpm/Yarn Local Packages Install",
     "main": "lib",
     "types": "lib",
