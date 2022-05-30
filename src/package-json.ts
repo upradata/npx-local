@@ -9,6 +9,8 @@ import { Errors } from './types';
 
 export class Local {
     dependencies?: ObjectOf<Dependency>;
+    devDependencies?: ObjectOf<Dependency>;
+    peersDependencies?: ObjectOf<Dependency>;
     usedBy?: ObjectOf<string>;
 }
 

@@ -1,12 +1,15 @@
-import { findUp, oneLine, readPackageJson, createCli, CliCommand, parsers as cliParsers } from '@upradata/node-util';
+import { findUp, oneLine, createCli, CliCommand, parsers as cliParsers, CliOptionInit } from '@upradata/node-util';
+import { dependenciesDef } from './cli.common';
 import { LocalInstallOptions } from './local-install.options';
 import { LocalInstall } from './local-install';
+import { mergeInto } from './merge-to-branch';
+import { DependencyType } from './types';
 
 
 const installCommand = (commandName: 'install' | 'add', description: string): CliCommand => {
     const command = createCli();
 
-    command.name(commandName === 'add' ? 'add' : commandName);
+    command.name(commandName);
 
     if (commandName === 'add')
         command.argument('<local-packages...>', 'local packages to install');
@@ -14,9 +17,25 @@ const installCommand = (commandName: 'install' | 'add', description: string): Cl
     command.description(description);
 
 
-
     if (commandName === 'add') {
         command.option('-l, --local-packages <packages...>', 'local packages to install');
+
+        const depTypeOptions: CliOptionInit<DependencyType> = {
+            flags: '--dependency-type',
+            parser: cliParsers.choices(dependenciesDef.map(d => d.depType))
+        };
+
+        command.option(depTypeOptions);
+
+        for (const { flags, depName, depType } of dependenciesDef) {
+            command.option({
+                flags: `${flags} [bool]`, description: `add the local dependency in ${depName}`, parser: cliParsers.boolean,
+                aliases: [ {
+                    ...depTypeOptions, mode: 'target', transform: (v: string) => v === null || v === 'true' ? depType : undefined
+                } ]
+            });
+
+        }
     }
 
     command.option('-p, --project-dir <path>', 'directory of project where to install local dependencies', './');
@@ -48,20 +67,28 @@ const installCommand = (commandName: 'install' | 'add', description: string): Cl
 const copyLocalToNpmDepsCommand = (): CliCommand => {
     const command = createCli();
 
-    command.name('local-to-npm');
+    command.name('local-to-npm').alias('transfer');
     command.description('copy all local dependencies to npm dependencies [package.json].dependencies/devDependencies');
 
+    command.action(() => new LocalInstall().copyLocalDepsToNpmProperty());
 
-    command.option('-P, --prod', 'add the local dependency in [package.json].dependencies', true);
-    command.option('-D, --dev', 'add the local dependency in [package.json].devDependencies');
+    return command;
+};
 
 
-    command.action((options: { dev: boolean; prod: boolean; }) => {
-        new LocalInstall({
-            npmPropertyToCopyLocalDeps: options.dev ? 'devDependencies' : 'dependencies',
-        }).copyLocalDepsToNpmProperty();
+const mergeIntoBranch = (): CliCommand => {
+    const command = createCli();
+
+    command.name('merge-into').alias('merge');
+    command.description('merge current branch to specified branch');
+
+    command.option('-b, --branch', 'branch name where to merge', 'master');
+    command.option('--no-patch', 'patch version before merging');
+    command.option('--no-publish', 'publish to npm registry');
+
+    command.action((options: { branch: string; patch: boolean; publish: boolean; }) => {
+        return mergeInto(options.branch, { bumpVersion: options.patch, npmPublish: options.publish });
     });
-
 
     return command;
 };
@@ -78,6 +105,7 @@ export function runCli() {
     cli.addCommand(installCommand('add', 'add local dependencies to package.json'));
     cli.addCommand(installCommand('install', 'install local dependencies from package.json'));
     cli.addCommand(copyLocalToNpmDepsCommand());
+    cli.addCommand(mergeIntoBranch());
 
     cli.parse();
 }

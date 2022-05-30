@@ -5,7 +5,7 @@ import { fileExists, green, oneLine, styles, terminal, yellow } from '@upradata/
 import { isDefined, isUndefined } from '@upradata/util';
 import { Component, InjectProp } from '@upradata/dependency-injection';
 import { InstallMode } from './local-install.options';
-import { NpmProject } from './node-project';
+import { NpmPackage } from './npm-package';
 import { isSkipped, RelativeAbsolute, Skipped, SourceDest } from './types';
 import { Logger } from './logger';
 
@@ -14,7 +14,7 @@ export class InstalledFiles {
 
     files = new Set<(SourceDest<RelativeAbsolute> | Skipped)>();
 
-    constructor(public dest: NpmProject) { }
+    constructor(public dest: NpmPackage) { }
 
     removeFiles(...files: RelativeAbsolute[]) {
         for (const file of files) {
@@ -36,8 +36,8 @@ export class LogOptions {
 
 
 export class FilesInstallerOptions {
-    project: NpmProject;
-    dependency: NpmProject;
+    npmPackage: NpmPackage;
+    dependency: NpmPackage;
     installDir: string;
     mode: InstallMode = 'link';
     verbose?: number = 0;
@@ -59,7 +59,7 @@ export class FilesInstaller extends FilesInstallerOptions {
     constructor(options: FilesInstallerOptions) {
         super(options);
         this.pathType = this.verbose > 1 ? 'absolute' : 'relative';
-        this.installedFiles = new InstalledFiles(this.project);
+        this.installedFiles = new InstalledFiles(this.npmPackage);
     }
 
 
@@ -123,7 +123,7 @@ export class FilesInstaller extends FilesInstallerOptions {
 
     public async copyFiles(filesToBeInstalled?: FilesToBeInstalled): Promise<InstalledFiles> {
         const filesToBeCopied = filesToBeInstalled || await this.readFilesToBeInstalled();
-        const copiedFiles = new InstalledFiles(this.project);
+        const copiedFiles = new InstalledFiles(this.npmPackage);
 
         if (filesToBeCopied.size === 0) {
             const projectPath = this.verbose > 1 ? this.dependency.projectPath.absolute : this.dependency.projectPath.relative;
@@ -170,7 +170,7 @@ export class FilesInstaller extends FilesInstallerOptions {
 
 
     public get directoryToCopy() {
-        return this.project.path(this.installDir, this.dependency.packageJson.json.name);
+        return this.npmPackage.path(this.installDir, this.dependency.packageJson.json.name);
 
     }
 

@@ -1,4 +1,5 @@
 import { InstallMode } from './local-install.options';
+import { DependencyName } from './types';
 
 
 export interface DependencyDetail {
@@ -13,6 +14,7 @@ export type Dependency = DependencyDetail | string;
 export interface LocalDependencyOptions {
     version?: string;
     mode?: InstallMode;
+    dependencyName?: DependencyName;
 }
 
 
@@ -23,9 +25,12 @@ export class LocalDependency {
     public mode: InstallMode;
     public installDir: string;
     public sourcePath: string;
+    public dependencyName: DependencyName;
+
 
     constructor(dependency: Dependency, options?: LocalDependencyOptions) {
         this.parseDependency(dependency, options);
+        this.dependencyName = options?.dependencyName || 'dependencies';
     }
 
     private parseDependency(dependency: Dependency, options: LocalDependencyOptions = {}) {
