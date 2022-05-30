@@ -30,7 +30,10 @@
         "node-watch": "^0.7.3",
         "shelljs": "^0.8.5",
         "tslib": "^2.4.0",
-        "typescript": "^4.7.2"
+        "typescript": "^4.7.2",
+        "@upradata/util": "^15.0.0",
+        "@upradata/node-util": "^16.0.6",
+        "@upradata/dependency-injection": "^2.0.3"
     },
     "devDependencies": {
         "@schemastore/package": "0.0.6",
@@ -51,5 +54,6 @@
             "@upradata/node-util": "link:/home/milottit/Libraries/Upra-Data/node-util@16.0.6",
             "@upradata/dependency-injection": "link:/home/milottit/Libraries/Upra-Data/dependency-injection@2.0.3"
         }
-    }
+    },
+    "peersDependencies": {}
 }
