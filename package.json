@@ -1,6 +1,6 @@
 {
 	"name": "@upradata/npx-local",
-	"version": "3.5.4",
+	"version": "3.5.5",
 	"description": "Npm/Pnpm/Yarn Local Packages Install",
 	"main": "lib",
 	"types": "lib",
@@ -28,8 +28,8 @@
 	"dependencies": {
 		"fs-extra": "^10.1.0",
 		"node-watch": "^0.7.3",
-		"@upradata/util": "^13.0.1",
-		"@upradata/node-util": "^14.0.2",
+		"@upradata/util": "^15.0.0",
+		"@upradata/node-util": "^16.0.5",
 		"@upradata/dependency-injection": "^2.0.3"
 	},
 	"devDependencies": {
@@ -47,8 +47,8 @@
 	},
 	"local": {
 		"dependencies": {
-			"@upradata/util": "link:/home/milottit/Libraries/Upra-Data/util@13.0.1",
-			"@upradata/node-util": "link:/home/milottit/Libraries/Upra-Data/node-util@14.0.2",
+			"@upradata/util": "link:/home/milottit/Libraries/Upra-Data/util@15.0.0",
+			"@upradata/node-util": "link:/home/milottit/Libraries/Upra-Data/node-util@16.0.5",
 			"@upradata/dependency-injection": "link:/home/milottit/Libraries/Upra-Data/dependency-injection@2.0.3"
 		}
 	}
