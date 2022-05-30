@@ -1,5 +1,6 @@
 import { AppInjector } from '@upradata/dependency-injection';
 import { keys } from '@upradata/util';
+import { DependencyName, DependencyType } from './types';
 
 
 export class InstallModes { copy; link; }
@@ -17,10 +18,10 @@ export interface LocalPackage {
 }
 
 
-export type NpmPackageProperties = 'dependencies' | 'devDependencies';
 
 
 export class LocalInstallOptions<LocalDep extends string | LocalPackage = string | LocalPackage> {
+    dependencyType?: DependencyType = 'prod';
     localPackages?: LocalDep[] = [];
     projectDir?: string = process.cwd(); // which project where we want to install the local packages
     installDir?: string = 'node_modules'; // dir where all the local packages will be copied
@@ -30,7 +31,7 @@ export class LocalInstallOptions<LocalDep extends string | LocalPackage = string
     // force: boolean = false;
     mode?: InstallMode = 'link';
     watch?: boolean = false;
-    npmPropertyToCopyLocalDeps?: NpmPackageProperties = 'dependencies';
+    npmPropertyToCopyLocalDeps?: DependencyName = 'dependencies';
 }
 
 

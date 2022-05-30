@@ -3,24 +3,24 @@ import { CodifiedError, values } from '@upradata/util';
 import { AppInjector, Component, InjectProp } from '@upradata/dependency-injection';
 import { FilesInstaller } from './files-installer';
 import { FilesInstallerWatcher } from './files-installer.watcher';
-import { LocalDependency } from './local-dependency';
+import { Dependency, LocalDependency } from './local-dependency';
 import { LocalInstallOptions } from './local-install.options';
-import { NpmProject } from './node-project';
-import { NpmProjectDependencies, NpmProjectDependency } from './npmproject-dependencies';
-import { FromTo, isSkipped, Skipped } from './types';
+import { NpmPackage, NpmPackageDependency } from './npm-package';
+import { DependencyName, isSkipped, Skipped } from './types';
 import { Logger } from './logger';
+import { dependenciesDef, getDependencyName } from './cli.common';
 
 
-export type InstalledLocalDependency = FromTo<NpmProjectDependency, NpmProject> | Skipped;
+export type InstalledLocalDependency = { npmPackageDependency: NpmPackageDependency; npmPackage: NpmPackage; } | Skipped;
 
 @Component()
 export class LocalInstall {
     @InjectProp(Logger) private logger: Logger;
     public options: LocalInstallOptions;
-    private filesInstallerByProject = new Map<NpmProject, FilesInstaller>();
+    private filesInstallerByProject = new Map<NpmPackage, FilesInstaller>();
 
 
-    constructor(options: LocalInstallOptions) {
+    constructor(options?: LocalInstallOptions) {
         this.options = Object.assign(new LocalInstallOptions(), options);
 
         AppInjector.init({
@@ -42,28 +42,46 @@ export class LocalInstall {
         }
     }
 
+    public async getLocalDependencies(npmPackage: NpmPackage) {
+        await npmPackage.loadProject();
+        type Deps = { depName: DependencyName; dependency: Dependency; }[];
+        const packageJson = await npmPackage.getPackageJson();
+
+        const dependencies = dependenciesDef.filter(({ depName }) => !!packageJson.local[ depName ]).reduce((deps, { depName }) => [
+            ...deps,
+            ...values(packageJson.local[ depName ]).map(d => ({
+                depName,
+                dependency: d
+            })) ], [] as Deps);
+
+
+        return dependencies.map(({ depName, dependency }) => new LocalDependency(dependency, { dependencyName: depName }));
+    }
+
     public async installLocalDependenciesFromPackageJson(): Promise<void> {
-        const npmProject = new NpmProject(this.options.projectDir);
-        await npmProject.loadProject();
-
-        const dependencies = values(npmProject.packageJson.localProp('dependencies').sync);
-
-        const localDeps = dependencies.map(d => new LocalDependency(d));
+        const npmPackage = new NpmPackage(this.options.projectDir);
+        const localDeps = await this.getLocalDependencies(npmPackage);
 
         if (localDeps.length === 0) {
-            this.logger.log(s.yellow.full.bold.args.$`No ${'local.dependencies'} found in package.json of "${npmProject.packageJson.json.name}"`);
+            this.logger.log(s.yellow.full.bold.args.$`No ${'local.dependencies'} found in package.json of "${npmPackage.packageJson.json.name}"`);
             return;
         }
 
         return this.installLocalDependencies(localDeps);
     }
 
+
+    async updateLatest() {
+        return this.installLocalDependenciesFromPackageJson();
+    }
+
     public addLocalDepedencies(): Promise<void> {
+        console.log(this.options.dependencyType);
         return this.installLocalDependencies(this.options.localPackages.map(l =>
             new LocalDependency({
                 path: typeof l === 'string' ? l : l.path,
                 installDir: this.options.installDir
-            }, { mode: typeof l === 'string' ? undefined : l.mode || this.options.mode }))
+            }, { mode: typeof l === 'string' ? undefined : l.mode || this.options.mode, dependencyName: getDependencyName(this.options.dependencyType) }))
         );
     }
 
@@ -72,30 +90,28 @@ export class LocalInstall {
         if (!dependencies || dependencies.length === 0)
             return Promise.resolve();
 
-        const npmProjectDependencies = new NpmProjectDependencies();
-        const project = new NpmProject(this.options.projectDir);
+        const npmPackage = new NpmPackage(this.options.projectDir);
+        await npmPackage.addDependency(...dependencies);
 
-        await npmProjectDependencies.addDependency(project, ...dependencies);
-
-        const installedProjects = await this.doInstallProjectLocalDependencies(project);
+        const installedPackages = await this.doInstallPackageLocalDependencies(npmPackage);
 
         this.logger.log();
 
-        await Promise.all(installedProjects.map(async result => {
+        await Promise.all(installedPackages.map(async result => {
             if (isSkipped(result)) {
                 const { reason } = result;
                 console.warn(yellow`- Skipped: "${reason}"`);
                 return;
             }
 
-            const { from, to } = result;
+            const { npmPackage, npmPackageDependency: dependency } = result;
 
-            await from.project.writePackageJson();
-            await to.writePackageJson();
+            await dependency.package.writePackageJson();
+            await npmPackage.writePackageJson();
 
             this.logger.log(s.oneLine.blue.bold.full.underline.args.$`
-                    - Package "${from.project.packageJson.json.name}" installed in "${to.packageJson.json.name}"
-                      "[package.json].local.dependencies" (mode: ${from.localDependency.mode})`
+                    - Package "${dependency.package.packageJson.json.name}" installed in "${npmPackage.packageJson.json.name}"
+                      "[package.json].local.${dependency.localDependency.dependencyName}" (mode: ${dependency.localDependency.mode})`
             );
         }));
 
@@ -127,24 +143,24 @@ export class LocalInstall {
          return Promise.all(installDepsPromises);
      } */
 
-    private async doInstallProjectLocalDependencies(project: NpmProject): Promise<InstalledLocalDependency[]> {
+    private async doInstallPackageLocalDependencies(npmPackage: NpmPackage): Promise<InstalledLocalDependency[]> {
 
-        await project.loadProject();
+        await npmPackage.loadProject();
 
-        return Promise.all(Object.entries(project.dependencies).map(async ([ depName, dependency ]) => {
+        return Promise.all(Object.entries(npmPackage.dependencies).map(async ([ npmDepName, dependency ]) => {
 
-            const depProject = dependency.project;
-            await depProject.loadProject();
+            const npmDepPackage = dependency.package;
+            await npmDepPackage.loadProject();
 
             const filesInstaller = new FilesInstaller({
-                project,
-                dependency: new NpmProject(dependency.project.absolutePath()),
+                npmPackage,
+                dependency: new NpmPackage(dependency.package.absolutePath()),
                 mode: dependency.localDependency.mode,
                 verbose: this.options.verbose,
                 installDir: dependency.localDependency.installDir
             });
 
-            this.filesInstallerByProject.set(depProject, filesInstaller);
+            this.filesInstallerByProject.set(npmDepPackage, filesInstaller);
             const filesToBeInstalled = await filesInstaller.readFilesToBeInstalled();
 
             /*  if (await dependency.isInstalledIn(project)) {
@@ -171,7 +187,7 @@ export class LocalInstall {
 
 
             if (filesToBeInstalled.size === 0)
-                console.warn(yellow`${depProject.packageJson.json.name} has no file to be copied`);
+                console.warn(yellow`${npmDepPackage.packageJson.json.name} has no file to be copied`);
             else
                 await filesInstaller.copyFiles(filesToBeInstalled);
 
@@ -181,23 +197,24 @@ export class LocalInstall {
             }
 
             // add localDependencies project in package.json
-            await project.addLocalDependency(depName);
+            await npmPackage.addLocalDependency(npmDepName);
 
-            return { from: dependency, to: project };
+            return { npmPackage, npmPackageDependency: dependency };
         }));
     }
 
 
     async copyLocalDepsToNpmProperty() {
         try {
-            const { projectDir, npmPropertyToCopyLocalDeps } = this.options;
+            await this.updateLatest();
+            const { projectDir } = this.options;
 
-            const project = new NpmProject(projectDir);
+            const npmPackage = new NpmPackage(projectDir);
 
-            const depNames = await project.copyLocalDependencyToNpmDependencies(npmPropertyToCopyLocalDeps);
-            await project.writePackageJson();
+            const depNames = await npmPackage.copyLocalDependencyToNpmDependencies();
+            await npmPackage.writePackageJson();
 
-            const title = terminal.title(`Dependencies installed in "${npmPropertyToCopyLocalDeps}"`, {
+            const title = terminal.title(`Dependencies installed`, {
                 style: s.white.bold.bgMagenta.transform,
                 bgStyle: s.bgMagenta.transform,
                 type: 'band'
