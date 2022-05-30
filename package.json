@@ -1,52 +1,52 @@
 {
-    "name": "@upradata/npx-local",
-    "version": "3.5.4",
-    "description": "Npm/Pnpm/Yarn Local Packages Install",
-    "main": "lib",
-    "types": "lib",
-    "module": "lib",
-    "files": [
-        "lib",
-        "make-bin"
-    ],
-    "bin": "lib/src/index.js",
-    "scripts": {
-        "clean": "shx rm -rf lib lib-esm",
-        "pre-build": "npm run clean",
-        "build": "tsc -p tsconfig.json && ./make-bin",
-        "post-build": "npm run test && npm run e2e",
-        "watch": "npm run build:watch",
-        "build:watch": "tsc -p tsconfig.json -w",
-        "test": "npm jest --passWithNoTests --verbose false --config jest-ut.config.js",
-        "e2e": "npm jest --passWithNoTests --verbose false --config jest-e2e.config.js",
-        "github-push": "npm run build && npm version patch && git pushall && git pushall-tags",
-        "npm-publish": "npm run build && npm publish --access public",
-        "renamer": "renamer -regex --find '\\.js$' --replace '.mjs' './lib-esm/**/*.js'"
-    },
-    "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
-    "license": "MIT",
-    "dependencies": {
-        "fs-extra": "^10.1.0",
-        "node-watch": "^0.7.3"
-    },
-    "devDependencies": {
-        "@schemastore/package": "0.0.6",
-        "@types/fs-extra": "^9.0.13",
-        "@types/jest": "^27.5.1",
-        "@types/node": "^17.0.36",
-        "concurrently": "^7.2.1",
-        "jest": "^28.1.0",
-        "jest-expect-message": "^1.0.2",
-        "shx": "^0.3.4",
-        "ts-jest": "^28.0.3",
-        "ts-node": "^10.8.0",
-        "typescript": "^4.7.2"
-    },
-    "local": {
-        "dependencies": {
-            "@upradata/util": "link:/home/milottit/Libraries/Upra-Data/util@13.0.1",
-            "@upradata/node-util": "link:/home/milottit/Libraries/Upra-Data/node-util@14.0.2",
-            "@upradata/dependency-injection": "link:/home/milottit/Libraries/Upra-Data/dependency-injection@2.0.3"
-        }
-    }
+	"name": "@upradata/npx-local",
+	"version": "3.5.4",
+	"description": "Npm/Pnpm/Yarn Local Packages Install",
+	"main": "lib",
+	"types": "lib",
+	"module": "lib",
+	"files": [
+		"lib",
+		"make-bin"
+	],
+	"bin": "lib/src/index.js",
+	"scripts": {
+		"clean": "shx rm -rf lib lib-esm",
+		"pre-build": "npm run clean",
+		"build": "tsc -p tsconfig.json && ./make-bin",
+		"post-build": "npm run test && npm run e2e",
+		"watch": "npm run build:watch",
+		"build:watch": "tsc -p tsconfig.json -w",
+		"test": "npm jest --passWithNoTests --verbose false --config jest-ut.config.js",
+		"e2e": "npm jest --passWithNoTests --verbose false --config jest-e2e.config.js",
+		"github-push": "npm run build && npm version patch && git pushall && git pushall-tags",
+		"npm-publish": "npm run build && npm publish --access public",
+		"renamer": "renamer -regex --find '\\.js$' --replace '.mjs' './lib-esm/**/*.js'"
+	},
+	"author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
+	"license": "MIT",
+	"dependencies": {
+		"fs-extra": "^10.1.0",
+		"node-watch": "^0.7.3"
+	},
+	"devDependencies": {
+		"@schemastore/package": "0.0.6",
+		"@types/fs-extra": "^9.0.13",
+		"@types/jest": "^27.5.1",
+		"@types/node": "^17.0.36",
+		"concurrently": "^7.2.1",
+		"jest": "^28.1.0",
+		"jest-expect-message": "^1.0.2",
+		"shx": "^0.3.4",
+		"ts-jest": "^28.0.3",
+		"ts-node": "^10.8.0",
+		"typescript": "^4.7.2"
+	},
+	"local": {
+		"dependencies": {
+			"@upradata/util": "link:/home/milottit/Libraries/Upra-Data/util@15.0.0",
+			"@upradata/node-util": "link:/home/milottit/Libraries/Upra-Data/node-util@16.0.5",
+			"@upradata/dependency-injection": "link:/home/milottit/Libraries/Upra-Data/dependency-injection@2.0.3"
+		}
+	}
 }
