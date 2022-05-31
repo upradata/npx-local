@@ -1,6 +1,6 @@
 {
     "name": "@upradata/npx-local",
-    "version": "3.5.8",
+    "version": "3.5.9",
     "description": "Npm/Pnpm/Yarn Local Packages Install",
     "main": "lib",
     "types": "lib",
@@ -26,9 +26,13 @@
     "author": "Thomas Milotti <thomas.milotti@gmail.com> (https://github.com/milottit)",
     "license": "MIT",
     "dependencies": {
+        "@upradata/dependency-injection": "^2.0.3",
+        "@upradata/node-util": "^16.0.6",
+        "@upradata/util": "^15.0.0",
         "fs-extra": "^10.1.0",
         "node-watch": "^0.7.3",
         "shelljs": "^0.8.5",
+        "shelljs-live": "^0.0.5",
         "tslib": "^2.4.0",
         "typescript": "^4.7.2",
         "@upradata/util": "^15.0.0",
