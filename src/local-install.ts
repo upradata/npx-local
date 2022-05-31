@@ -1,7 +1,6 @@
 import { AppInjector, Component, InjectProp } from '@upradata/dependency-injection';
 import { green, red, styles as s, terminal, yellow } from '@upradata/node-util';
-import { ifThen } from '@upradata/util';
-import { CodifiedError, values } from '@upradata/util';
+import { CodifiedError, ifThen, values } from '@upradata/util';
 import { FilesInstaller } from './files-installer';
 import { FilesInstallerWatcher } from './files-installer.watcher';
 import { Dependency, LocalDependency } from './local-dependency';
