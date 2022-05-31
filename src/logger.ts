@@ -1,6 +1,7 @@
 import { Inject } from '@upradata/dependency-injection';
 import { LocalInstallOptions } from './local-install.options';
 
+
 export class Logger {
     constructor(@Inject(LocalInstallOptions) private options: LocalInstallOptions) { }
 

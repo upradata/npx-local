@@ -1,8 +1,8 @@
 import { dirname, join } from 'path';
-import type { JSONSchemaForNPMPackageJsonFiles } from '@schemastore/package';
 import { forEachFiles, ForEachFilesOptions } from '@upradata/node-util';
 
 
+import type { JSONSchemaForNPMPackageJsonFiles } from '@schemastore/package';
 interface Project {
     folder: string;
     package: JSONSchemaForNPMPackageJsonFiles;

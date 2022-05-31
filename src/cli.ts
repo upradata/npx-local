@@ -1,9 +1,16 @@
-import { findUp, oneLine, createCli, CliCommand, parsers as cliParsers, CliOptionInit } from '@upradata/node-util';
-import { dependenciesDef } from './cli.common';
-import { LocalInstallOptions } from './local-install.options';
+import {
+    CliCommand,
+    CliOptionInit,
+    createCli,
+    findUp,
+    oneLine,
+    parsers as cliParsers
+} from '@upradata/node-util';
 import { LocalInstall } from './local-install';
+import { LocalInstallOptions } from './local-install.options';
 import { mergeInto } from './merge-to-branch';
-import { DependencyType } from './types';
+import { DependencyType, SemVersionType } from './types';
+import { dependenciesDef, semVerDefinitions } from './util';
 
 
 const installCommand = (commandName: 'install' | 'add', description: string): CliCommand => {
@@ -22,10 +29,11 @@ const installCommand = (commandName: 'install' | 'add', description: string): Cl
 
         const depTypeOptions: CliOptionInit<DependencyType> = {
             flags: '--dependency-type',
+            description: `add the local dependency in one of [ ${dependenciesDef.map(d => d.depType).join(', ')} ]`,
             parser: cliParsers.choices(dependenciesDef.map(d => d.depType))
         };
 
-        command.option(depTypeOptions);
+        command.option({ ...depTypeOptions, defaultValue: 'prod' as DependencyType });
 
         for (const { flags, depName, depType } of dependenciesDef) {
             command.option({
@@ -34,7 +42,6 @@ const installCommand = (commandName: 'install' | 'add', description: string): Cl
                     ...depTypeOptions, mode: 'target', transform: (v: string) => v === null || v === 'true' ? depType : undefined
                 } ]
             });
-
         }
     }
 
@@ -76,7 +83,7 @@ const copyLocalToNpmDepsCommand = (): CliCommand => {
 };
 
 
-const mergeIntoBranch = (): CliCommand => {
+const mergeIntoBranchCommand = (): CliCommand => {
     const command = createCli();
 
     command.name('merge-into').alias('merge');
@@ -94,6 +101,36 @@ const mergeIntoBranch = (): CliCommand => {
 };
 
 
+const bumpVersionCommand = (): CliCommand => {
+    const command = createCli();
+
+    command.name('bump-version');
+    command.description('Bump SemVer package version');
+
+    const semVerTypeOption: CliOptionInit<SemVersionType> = {
+        flags: '-t, --type [semver type]',
+        description: 'SemVer part to bump',
+        parser: cliParsers.choices(semVerDefinitions.map(d => d.name))
+    };
+
+    command.option({ ...semVerTypeOption, defaultValue: 'patch' as SemVersionType });
+
+    for (const { name, flags } of semVerDefinitions) {
+        command.option({
+            flags: `${flags} [bool]`, description: `bump SemVer ${name} part`, parser: cliParsers.boolean,
+            aliases: [ {
+                ...semVerTypeOption, mode: 'target', transform: (v: string) => v === null || v === 'true' ? name : undefined
+            } ]
+        });
+    }
+
+    command.option('-v, --version', 'specify exatcly the version');
+
+    command.action((options: { type: SemVersionType; version: string; }) => new LocalInstall().bumpVersion({ ...options, semVer: options.type }));
+
+    return command;
+};
+
 
 export function runCli() {
     const cli = createCli({ packageJson: findUp.sync('package.json', { from: __dirname }) });
@@ -105,7 +142,8 @@ export function runCli() {
     cli.addCommand(installCommand('add', 'add local dependencies to package.json'));
     cli.addCommand(installCommand('install', 'install local dependencies from package.json'));
     cli.addCommand(copyLocalToNpmDepsCommand());
-    cli.addCommand(mergeIntoBranch());
+    cli.addCommand(mergeIntoBranchCommand());
+    cli.addCommand(bumpVersionCommand());
 
     cli.parse();
 }

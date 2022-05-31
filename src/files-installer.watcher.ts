@@ -1,12 +1,11 @@
-import path from 'path';
 import fs from 'fs-extra';
 import watch, { ImprovedFSWatcher } from 'node-watch';
-import { styles, green, blue } from '@upradata/node-util';
+import path from 'path';
 import { Component, InjectProp } from '@upradata/dependency-injection';
-import { RelativeAbsolute } from './types';
+import { blue, green, styles } from '@upradata/node-util';
 import { FilesInstaller, FilesToBeInstalled } from './files-installer';
 import { Logger } from './logger';
-
+import { RelativeAbsolute } from './types';
 
 
 @Component()

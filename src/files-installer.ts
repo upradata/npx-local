@@ -1,13 +1,13 @@
 
 import { copy, ensureSymlink, lstat, remove, Stats } from 'fs-extra';
 import path from 'path';
+import { Component, InjectProp } from '@upradata/dependency-injection';
 import { fileExists, green, oneLine, styles, terminal, yellow } from '@upradata/node-util';
 import { isDefined, isUndefined } from '@upradata/util';
-import { Component, InjectProp } from '@upradata/dependency-injection';
 import { InstallMode } from './local-install.options';
+import { Logger } from './logger';
 import { NpmPackage } from './npm-package';
 import { isSkipped, RelativeAbsolute, Skipped, SourceDest } from './types';
-import { Logger } from './logger';
 
 
 export class InstalledFiles {

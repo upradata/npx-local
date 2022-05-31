@@ -1,14 +1,15 @@
-import { green, red, styles as s, terminal, yellow } from '@upradata/node-util';
-import { CodifiedError, values } from '@upradata/util';
 import { AppInjector, Component, InjectProp } from '@upradata/dependency-injection';
+import { green, red, styles as s, terminal, yellow } from '@upradata/node-util';
+import { ifThen } from '@upradata/util';
+import { CodifiedError, values } from '@upradata/util';
 import { FilesInstaller } from './files-installer';
 import { FilesInstallerWatcher } from './files-installer.watcher';
 import { Dependency, LocalDependency } from './local-dependency';
 import { LocalInstallOptions } from './local-install.options';
-import { NpmPackage, NpmPackageDependency } from './npm-package';
-import { DependencyName, isSkipped, Skipped } from './types';
 import { Logger } from './logger';
-import { dependenciesDef, getDependencyName } from './cli.common';
+import { NpmPackage, NpmPackageDependency } from './npm-package';
+import { DependencyName, isSkipped, SemVersionType, Skipped } from './types';
+import { dependenciesDef, getDependencyName } from './util';
 
 
 export type InstalledLocalDependency = { npmPackageDependency: NpmPackageDependency; npmPackage: NpmPackage; } | Skipped;
@@ -231,6 +232,31 @@ export class LocalInstall {
         } catch (e) {
             handlerError(e);
         }
+    }
+
+    async bumpVersion(options: { semVer?: SemVersionType; version?: string; }) {
+        const { semVer, version } = options;
+
+        const npmPackage = new NpmPackage(this.options.projectDir);
+        const packageJson = await npmPackage.getPackageJson();
+        const oldVersion = packageJson.version;
+
+        if (version) {
+            packageJson.version = version;
+        } else {
+            const [ major, minor, patch ] = packageJson.version.split('.').map(s => parseInt(s, 10));
+            const makeSemVer = (major: string | number, minor: string | number, patch: string | number) => `${major}.${minor}.${patch}`;
+
+            const newVersion = ifThen()
+                .next({ if: semVer === 'major', then: makeSemVer(major + 1, minor, patch) })
+                .next({ if: semVer === 'minor', then: makeSemVer(major, minor + 1, patch) })
+                .next({ if: semVer === 'patch', then: makeSemVer(major, minor, patch + 1) }).value;
+
+            packageJson.version = newVersion;
+        }
+
+        await npmPackage.writePackageJson();
+        this.logger.log(s.green.args.bold.full.$`Version bumped from ${oldVersion} ⟶  ${packageJson.version}`);
     }
 }
 

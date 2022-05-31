@@ -30,3 +30,6 @@ export enum Errors {
 
 export type DependencyType = 'prod' | 'dev' | 'peers';
 export type DependencyName = 'dependencies' | 'devDependencies' | 'peersDependencies';
+
+
+export type SemVersionType = 'major' | 'minor' | 'patch';
