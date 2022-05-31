@@ -76,7 +76,6 @@ export class LocalInstall {
     }
 
     public addLocalDepedencies(): Promise<void> {
-        console.log(this.options.dependencyType);
         return this.installLocalDependencies(this.options.localPackages.map(l =>
             new LocalDependency({
                 path: typeof l === 'string' ? l : l.path,
