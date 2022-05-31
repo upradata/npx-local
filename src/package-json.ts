@@ -1,6 +1,13 @@
 import { join } from 'path';
 import { JSONSchemaForNPMPackageJsonFiles } from '@schemastore/package';
-import { fileExists, findUp, readPackageJson, SyncAsync, SyncAsyncMode, SyncAsyncType } from '@upradata/node-util';
+import {
+    fileExists,
+    findUp,
+    readPackageJson,
+    SyncAsync,
+    SyncAsyncMode,
+    SyncAsyncType
+} from '@upradata/node-util';
 import { CodifiedError, ObjectOf, ValueOf } from '@upradata/util';
 import { Dependency } from './local-dependency';
 import { getOptions } from './local-install.options';

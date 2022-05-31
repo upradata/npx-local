@@ -5,9 +5,7 @@ import { entries, makeObject, ObjectOf } from '@upradata/util';
 import { LocalDependency } from './local-dependency';
 import { LocalInstallPackageJson } from './package-json';
 import { DependencyName, RelativeAbsolute } from './types';
-import { relativeAbsolutPath } from './util';
-import { dependenciesDef } from './cli.common';
-
+import { dependenciesDef, relativeAbsolutPath } from './util';
 
 
 export type NpmPackageDependency = {

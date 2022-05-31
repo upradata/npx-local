@@ -1,7 +1,8 @@
-import { styles as s } from '@upradata/node-util';
 import shell from 'shelljs';
 import live from 'shelljs-live';
+import { styles as s } from '@upradata/node-util';
 import { LocalInstall } from './local-install';
+
 
 type LogOptions = { newLine?: boolean; };
 

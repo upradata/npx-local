@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import path from 'path';
+
+
 import type { SettingsPrivate } from './settings.private';
 
 
