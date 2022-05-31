@@ -55,7 +55,7 @@ const installCommand = (commandName: 'install' | 'add', description: string): Cl
     command.action((...args: any[]) => {
         const options: LocalInstallOptions = commandName === 'install' ? args[ 0 ] : args[ 1 ];
         const commandArguments: string[] = commandName === 'install' ? [] : args[ 0 ];
-        console.log(options);
+
         const localPackages = (options.localPackages || []).concat(commandArguments);
         return new LocalInstall({ ...options, localPackages }).install();
     });
