@@ -1,11 +1,4 @@
-import {
-    CliCommand,
-    CliOptionInit,
-    createCli,
-    findUp,
-    oneLine,
-    parsers as cliParsers
-} from '@upradata/node-util';
+import { CliCommand, CliOptionInit, createCli, findUp, oneLine, parsers as cliParsers } from '@upradata/node-util';
 import { LocalInstall } from './local-install';
 import { LocalInstallOptions } from './local-install.options';
 import { mergeInto } from './merge-to-branch';
